@@ -20,7 +20,7 @@ namespace UltimateNode.Editor
         private void OnEnable()
         {
             // Add a graph view
-            m_GraphView = new UltimateGraphViewBase()
+            m_GraphView = new UltimateGraphViewBase(this)
             {
                 name = "UltimateGraphView"
             };
@@ -40,7 +40,6 @@ namespace UltimateNode.Editor
             var toolbar = new Toolbar();
             rootVisualElement.Add(toolbar);
 
-
             toolbar.Add(AddBtn("Add CommitGraphNode", () =>
             {
                 var group = new CommitGraphNode()
@@ -59,10 +58,11 @@ namespace UltimateNode.Editor
             {
                 var data = (objectField.value as TestMono).graphData;
                 // Test Load Graph 
-                UltimateNodeFactory.LoadGraph(data, out var nodes, out var edges);
+                UltimateNodeFactory.LoadGraph(data, out var nodes,
+                    out var edges, out var groups);
                 nodes.ForEach(x => { m_GraphView.AddElement(x); });
                 edges.ForEach(x => { m_GraphView.AddElement(x); });
-
+                groups.ForEach(x => { m_GraphView.AddElement(x); });
             }));
         }
 

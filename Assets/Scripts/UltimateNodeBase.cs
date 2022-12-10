@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Threading.Tasks;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,7 +9,7 @@ namespace UltimateNode
     public class UltimateNodeBase : Node
     {
         public string GUID;
-        public Dictionary<string, object> portData;
+        public Action OnPortConnectionChange;
 
         public UltimateNodeBase() : base()
         {
@@ -20,7 +21,7 @@ namespace UltimateNode
             }) { text = "+" };
             this.titleContainer.Add(btn);
         }
-
+        
         public Port AddOutput(
             string portName,
             Orientation orientation,
@@ -50,6 +51,10 @@ namespace UltimateNode
             return port;
         }
 
+        public void SetPosition(Vector2 position)
+        {
+            this.SetPosition(new Rect(position,Vector2.zero));
+        }
         public Port GetInputPort(string portName)
         {
             var port = this.inputContainer.Q<Port>(portName);
@@ -88,6 +93,7 @@ namespace UltimateNode
                 input = inputPort,
                 output = outputPort,
             };
+            OnPortConnectionChange?.Invoke();
             return edge;
         }
 
@@ -107,6 +113,7 @@ namespace UltimateNode
                 input = inputPort,
                 output = outputPort,
             };
+            OnPortConnectionChange?.Invoke();
             return edge;
         }
 
