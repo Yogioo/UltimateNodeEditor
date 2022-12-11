@@ -49,20 +49,15 @@ namespace UltimateNode
                 }
             });
             graphData = newGraphData;
-            var fsSerializer = new fsSerializer();
-            fsSerializer.TrySerialize(newGraphData.GetType(), newGraphData, out var data)
-                .AssertSuccessWithoutWarnings();
-            JsonData = fsJsonPrinter.CompressedJson(data);
+            JsonData = JsonHelper.Serialize(newGraphData);
             Debug.Log("Serialize Success");
         }
         
         [ContextMenu("LoadFromStr")]
         public void LoadFromStr()
         {
-            var fsSerializer = new fsSerializer();
-            var fsData = fsJsonParser.Parse(this.JsonData);
-            fsSerializer.TryDeserialize(fsData, ref this.graphData).AssertSuccessWithoutWarnings();
-            Debug.Log("DeSerialized Success");
+            this.graphData = JsonHelper.Deserialize<UltimateGraphData>(this.JsonData);
+                Debug.Log("DeSerialized Success");
         }
         
         [ContextMenu("SaveCurrentToStr")]

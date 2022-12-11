@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using FullSerializer;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.XR;
 
 namespace UltimateNode.Editor
 {
@@ -21,8 +24,74 @@ namespace UltimateNode.Editor
 
             AddSearchWindow();
 
+            //Copy And Paste Node
+            serializeGraphElements += CutCopy;
+            canPasteSerializedData += AllowPaste;
+            unserializeAndPaste += OnPaste;
+
             //TODO: Load Graph From Data
         }
+
+        /// <summary>
+        /// Check Node Can be paste
+        /// </summary>
+        /// <param name="p_Data"></param>
+        /// <returns></returns>
+        private bool AllowPaste(string p_Data)
+        {
+            return true;
+        }
+
+        private const char SPLIT_CHAR = '|';
+
+        /// <summary>
+        /// Cut or Copy Function, to Serialized Nodes
+        /// </summary>
+        /// <param name="p_Elements"></param>
+        /// <returns></returns>
+        private string CutCopy(IEnumerable<GraphElement> p_Elements)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            var loopElements = p_Elements.ToList();
+            for (var i = 0; i < loopElements.Count; i++)
+            {
+                var graphElement = loopElements[i];
+                if (graphElement is UltimateNodeBase n)
+                {
+                    //TODO: Json Serialized
+                    string jsonData = JsonHelper.Serialize(n.NodeData);
+                    sb.Append(jsonData);
+                }
+
+                if (i != loopElements.Count - 1)
+                {
+                    sb.Append(SPLIT_CHAR);
+                }
+            }
+
+            Debug.Log($"Serialized Json Data:{sb}");
+            return sb.ToString();
+        }
+
+        private void OnPaste(string p_Operationname, string p_Data)
+        {
+            if (string.IsNullOrEmpty(p_Data))
+            {
+                return;
+            }
+            var nodes = p_Data.Split(SPLIT_CHAR);
+            for (var i = 0; i < nodes.Length; i++)
+            {
+                UltimateNodeData newNodeData = JsonHelper.Deserialize<UltimateNodeData>(nodes[i]);
+                var ultimateNodeBase = UltimateNodeFactory.LoadBaseNode(newNodeData);
+                var newPos = newNodeData.Position;
+                newPos.position += Vector2.one * 50;
+                ultimateNodeBase.SetPosition(newPos);
+                this.AddElement(ultimateNodeBase);
+            }
+        }
+
 
         private void AddSearchWindow()
         {
@@ -75,7 +144,8 @@ namespace UltimateNode.Editor
                     menuEvent.menu.AppendAction("Add Group",
                         (a) =>
                         {
-                            this.AddElement(GenerateGroup(new Rect(GetLocalMousePosition(a.eventInfo.localMousePosition), Vector2.zero)));
+                            this.AddElement(GenerateGroup(
+                                new Rect(GetLocalMousePosition(a.eventInfo.localMousePosition), Vector2.zero)));
                         });
                     // AppendActionByUnityFunction(menuEvent.menu);
                 }
@@ -152,13 +222,13 @@ namespace UltimateNode.Editor
             this.AddElement(a.ConnectOutput(b, inputPortName, outputPortName));
         }
 
-        
+
         public Vector2 GetLocalMousePositionWhenSearchWindow(Vector2 worldMousePos)
         {
             var coreWindowPosition = worldMousePos - m_CoreWindow.position.position;
             return GetLocalMousePosition(coreWindowPosition);
         }
-        
+
         public Vector2 GetLocalMousePosition(Vector2 mousePos)
         {
             Vector2 worldMousePos = mousePos;

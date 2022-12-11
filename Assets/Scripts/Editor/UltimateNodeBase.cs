@@ -1,18 +1,20 @@
 ﻿using System;
-using System.Threading.Tasks;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
-
-namespace UltimateNode
+namespace UltimateNode.Editor
 {
     public class UltimateNodeBase : Node
     {
+        public UltimateNodeData NodeData;
+        
         public string GUID;
         public Action OnPortConnectionChange;
 
-        public UltimateNodeBase() : base()
+        public UltimateNodeBase(UltimateNodeData nodeData) : base()
         {
+            this.NodeData = nodeData;
+            
             Button btn = new Button(() =>
             {
                 AddOutput("Test", Orientation.Horizontal, Port.Capacity.Single, typeof(Rect));
@@ -20,8 +22,21 @@ namespace UltimateNode
                 this.RefreshPorts();
             }) { text = "+" };
             this.titleContainer.Add(btn);
+            
+           
         }
-        
+
+        public override void UpdatePresenterPosition()
+        {
+            this.NodeData.Position = this.GetPosition();    
+        }
+
+        public override void SetPosition(Rect newPos)
+        {
+            base.SetPosition(newPos);
+            this.NodeData.Position = newPos;
+        }
+
         public Port AddOutput(
             string portName,
             Orientation orientation,

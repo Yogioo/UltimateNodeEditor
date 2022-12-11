@@ -33,6 +33,8 @@ namespace UltimateNode.Editor
             // Add a button to the toolbar
             // after the graph view, so it's could covered by the graph view
             AddToolbar();
+            
+            
         }
 
         void AddToolbar()
@@ -54,9 +56,11 @@ namespace UltimateNode.Editor
             };
             toolbar.Add(objectField);
 
-            toolbar.Add(AddBtn("Add CommitGraphNode", () =>
+            toolbar.Add(AddBtn("Add Node By Json", () =>
             {
-                var data = (objectField.value as TestMono).graphData;
+                TestMono mono = objectField.value as TestMono;
+                mono.LoadFromStr();
+                var data = mono.graphData;
                 // Test Load Graph 
                 UltimateNodeFactory.LoadGraph(data, out var nodes,
                     out var edges, out var groups);

@@ -7,12 +7,12 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace UltimateNode
+namespace UltimateNode.Editor
 {
     public static class UltimateNodeFactory
     {
         public static void LoadGraph(UltimateGraphData graphData,
-            out List<UltimateNodeBase> nodes, out List<Edge> edges,out List<Group> groups)
+            out List<UltimateNodeBase> nodes, out List<Edge> edges, out List<Group> groups)
         {
             nodes = new List<UltimateNodeBase>();
             edges = new List<Edge>();
@@ -48,7 +48,7 @@ namespace UltimateNode
                     }
                 }
             }
-            
+
             for (var i = 0; i < graphData.Groups.Count; i++)
             {
                 var group = graphData.Groups[i];
@@ -57,6 +57,12 @@ namespace UltimateNode
             }
         }
 
+        /// <summary>
+        /// Generate Node By Method 
+        /// </summary>
+        /// <param name="methodInfo"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
         public static UltimateNodeBase GenerateBaseNode(MethodInfo methodInfo, Vector2 position)
         {
             // Init Node Data By Method Info 
@@ -69,17 +75,16 @@ namespace UltimateNode
             return ultimateNodeBase;
         }
 
-        
+
         /// <summary>
-        /// Generate Base Node 
+        /// Load Base Node By Node Data
         /// </summary>
-        /// <param name="nodeName"></param>
-        /// <param name="position"></param>
+        /// <param name="nodeData"></param>
         /// <returns></returns>
         public static UltimateNodeBase LoadBaseNode(UltimateNodeData nodeData)
         {
             // Add Entry Node
-            UltimateNodeBase loadedNode = new UltimateNodeBase
+            UltimateNodeBase loadedNode = new UltimateNodeBase(nodeData)
             {
                 title = nodeData.Name,
                 GUID = nodeData.GUID
@@ -135,7 +140,7 @@ namespace UltimateNode
                 }
                 else if (portValType == typeof(uint))
                 {
-                    var t = new IntegerField() { value = (int)portData.OriginVal};
+                    var t = new IntegerField() { value = (int)portData.OriginVal };
                     t.RegisterValueChangedCallback(x => { fieldInfo.SetValue(portData, x.newValue); });
                     element = t;
                 }

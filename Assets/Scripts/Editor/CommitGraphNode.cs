@@ -1,6 +1,6 @@
 ﻿using UnityEditor.Experimental.GraphView;
 
-namespace UltimateNode
+namespace UltimateNode.Editor
 {
     /// <summary>
     /// TODO: Commit Area

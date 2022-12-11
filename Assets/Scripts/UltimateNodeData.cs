@@ -84,6 +84,7 @@ namespace UltimateNode
         {
             Nodes = new List<UltimateNodeData>();
             Edges = new List<EdgeData>();
+            Groups = new List<UltimateGroupData>();
         }
     }
 
