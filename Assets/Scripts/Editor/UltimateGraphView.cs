@@ -5,17 +5,22 @@ using FullSerializer;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.XR;
 
 namespace UltimateNode.Editor
 {
-    public class UltimateGraphViewBase : GraphView
+    public class UltimateGraphView : GraphView
     {
+        private readonly UltimateWindowBase m_CoreWindow;
         private UltimateSearchWindow m_SearchWindow;
-        private UltimateWindowBase m_CoreWindow;
+        private UltimateGraphData m_GraphData;
 
-        public UltimateGraphViewBase(UltimateWindowBase m_Window)
+        private List<UltimateNodeView> m_AllNodes;
+        private List<UltimateEdgeView> m_AllEdges;
+
+        public UltimateGraphView(UltimateWindowBase m_Window)
         {
+            m_AllNodes = new List<UltimateNodeView>();
+            m_AllEdges = new List<UltimateEdgeView>();
             this.m_CoreWindow = m_Window;
             // Init  Grid Line BG
             AddBackground();
@@ -28,9 +33,72 @@ namespace UltimateNode.Editor
             serializeGraphElements += CutCopy;
             canPasteSerializedData += AllowPaste;
             unserializeAndPaste += OnPaste;
-
-            //TODO: Load Graph From Data
+            
+            Init(new UltimateGraphData());
         }
+
+        public void ClearAllNodeAndEdge()
+        {
+            m_AllNodes.ForEach(this.RemoveElement);
+            m_AllEdges.ForEach(this.RemoveElement);
+        }
+        public void Init(UltimateGraphData p_GraphData)
+        {
+
+            ClearAllNodeAndEdge();
+            this.m_GraphData = p_GraphData;
+
+            UltimateNodeFactory.LoadGraph(m_GraphData, out m_AllNodes,
+                out m_AllEdges);
+            m_AllNodes.ForEach(this.AddElement);
+            m_AllEdges.ForEach(this.AddElement);
+        }
+
+        /// <summary>
+        /// Add Node To Data And View
+        /// </summary>
+        /// <param name="nodeData"></param>
+        /// <param name="position"></param>
+        /// <returns></returns>
+        public UltimateNodeView AddNode(UltimateNodeData nodeData,Vector2 position)
+        {
+            var ultimateNodeBase = this.AddNode(nodeData);
+            ultimateNodeBase.SetPosition(position);
+            return ultimateNodeBase;
+        }
+        
+        /// <summary>
+        /// Add Node To Data And View
+        /// </summary>
+        /// <param name="nodeData"></param>
+        /// <returns></returns>
+        public UltimateNodeView AddNode(UltimateNodeData nodeData)
+        {
+            m_GraphData.Nodes.Add(nodeData);
+            UltimateNodeView ultimateNodeView = UltimateNodeFactory.GenerateBaseNode(nodeData);
+            this.AddElement(ultimateNodeView);
+            return ultimateNodeView;
+        }
+
+        /// <summary>
+        /// Add Edge to Data And View 
+        /// </summary>
+        /// <param name="p_UltimateEdgeData"></param>
+        /// <returns></returns>
+        public UltimateEdgeView AddEdge(UltimateEdgeData p_UltimateEdgeData)
+        {
+            AddEdgeData(p_UltimateEdgeData);
+            var generateEdge = UltimateNodeFactory.GenerateEdge(m_AllNodes, p_UltimateEdgeData);
+            this.AddElement(generateEdge);
+            return generateEdge;
+        }
+
+        public void AddEdgeData(UltimateEdgeData p_UltimateEdgeData)
+        {
+            m_GraphData.Edges.Add(p_UltimateEdgeData);
+        }
+        
+        #region Copy Paste
 
         /// <summary>
         /// Check Node Can be paste
@@ -53,11 +121,11 @@ namespace UltimateNode.Editor
         {
             StringBuilder sb = new StringBuilder();
 
-            var loopElements = p_Elements.ToList();
+            var loopElements = p_Elements.Where(x => x is UltimateNodeView).ToList();
             for (var i = 0; i < loopElements.Count; i++)
             {
                 var graphElement = loopElements[i];
-                if (graphElement is UltimateNodeBase n)
+                if (graphElement is UltimateNodeView n)
                 {
                     //TODO: Json Serialized
                     string jsonData = JsonHelper.Serialize(n.NodeData);
@@ -80,11 +148,12 @@ namespace UltimateNode.Editor
             {
                 return;
             }
-            var nodes = p_Data.Split(SPLIT_CHAR);
-            for (var i = 0; i < nodes.Length; i++)
+
+            var nodesJsonData = p_Data.Split(SPLIT_CHAR);
+            for (var i = 0; i < nodesJsonData.Length; i++)
             {
-                UltimateNodeData newNodeData = JsonHelper.Deserialize<UltimateNodeData>(nodes[i]);
-                var ultimateNodeBase = UltimateNodeFactory.LoadBaseNode(newNodeData);
+                UltimateNodeData newNodeData = JsonHelper.Deserialize<UltimateNodeData>(nodesJsonData[i]);
+                var ultimateNodeBase = UltimateNodeFactory.GenerateBaseNode(newNodeData);
                 var newPos = newNodeData.Position;
                 newPos.position += Vector2.one * 50;
                 ultimateNodeBase.SetPosition(newPos);
@@ -92,6 +161,9 @@ namespace UltimateNode.Editor
             }
         }
 
+        #endregion
+
+        #region Manipulators
 
         private void AddSearchWindow()
         {
@@ -141,50 +213,16 @@ namespace UltimateNode.Editor
             ContextualMenuManipulator manipulator = new ContextualMenuManipulator(
                 menuEvent =>
                 {
-                    menuEvent.menu.AppendAction("Add Group",
-                        (a) =>
-                        {
-                            this.AddElement(GenerateGroup(
-                                new Rect(GetLocalMousePosition(a.eventInfo.localMousePosition), Vector2.zero)));
-                        });
-                    // AppendActionByUnityFunction(menuEvent.menu);
+                    // menuEvent.menu.AppendAction("Add Group",
+                    //     (a) =>
+                    //     {
+                    //         this.AddElement(GenerateGroup(
+                    //             new Rect(GetLocalMousePosition(a.eventInfo.localMousePosition), Vector2.zero)));
+                    //     });
                 }
             );
             return manipulator;
         }
-        //
-        // public void AppendActionByUnityFunction(DropdownMenu p_MenuEventMenu)
-        // {
-        //     var targetClass = typeof(Mathf);
-        //     var methodsInfo = targetClass.GetMethods(BindingFlags.Static | BindingFlags.Public);
-        //     for (var i = 0; i < methodsInfo.Length; i++)
-        //     {
-        //         var methodInfo = methodsInfo[i];
-        //         StringBuilder methodDisplay = new StringBuilder($"{targetClass.Name}/{methodInfo.Name}");
-        //         methodDisplay.Append('(');
-        //         var parameterInfos = methodInfo.GetParameters();
-        //         for (var index = 0; index < parameterInfos.Length; index++)
-        //         {
-        //             var parameterInfo = parameterInfos[index];
-        //             methodDisplay.Append($"{parameterInfo.ParameterType.Name} {parameterInfo.Name}");
-        //             if (index != parameterInfos.Length - 1)
-        //             {
-        //                 methodDisplay.Append(',');
-        //             }
-        //         }
-        //
-        //         methodDisplay.Append(')');
-        //         methodDisplay.Append($" : {methodInfo.ReturnType.Name}");
-        //         p_MenuEventMenu.AppendAction(methodDisplay.ToString(),
-        //             actionEvent =>
-        //             {
-        //                 var node = GenerateNode(methodInfo,
-        //                     new Rect(actionEvent.eventInfo.mousePosition, Vector2.zero));
-        //                 this.AddElement(node);
-        //             });
-        //     }
-        // }
-
         /// <summary>
         /// Override this can make edge enable to connect
         /// </summary>
@@ -199,29 +237,10 @@ namespace UltimateNode.Editor
                 pot.node != startPort.node &&
                 pot.portType == startPort.portType).ToList();
         }
+        
+        #endregion
 
-        public Group GenerateGroup(Rect position)
-        {
-            var group = new Group()
-            {
-                name = "Group",
-            };
-            group.SetPosition(position);
-            return group;
-        }
-
-        /// <summary>
-        /// Connect Two Node Port By Port Name
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="inputPortName"></param>
-        /// <param name="outputPortName"></param>
-        private void ConnectPort(UltimateNodeBase a, UltimateNodeBase b, string inputPortName, string outputPortName)
-        {
-            this.AddElement(a.ConnectOutput(b, inputPortName, outputPortName));
-        }
-
+        #region Func
 
         public Vector2 GetLocalMousePositionWhenSearchWindow(Vector2 worldMousePos)
         {
@@ -235,5 +254,7 @@ namespace UltimateNode.Editor
             Vector2 localMousePos = contentViewContainer.WorldToLocal(worldMousePos);
             return localMousePos;
         }
+
+        #endregion
     }
 }

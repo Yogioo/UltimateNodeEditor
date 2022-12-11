@@ -2,19 +2,19 @@
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 namespace UltimateNode.Editor
 {
-    public class UltimateNodeBase : Node
+    public class UltimateNodeView : Node
     {
         public UltimateNodeData NodeData;
-        
-        public string GUID;
-        public Action OnPortConnectionChange;
 
-        public UltimateNodeBase(UltimateNodeData nodeData) : base()
+        public event Action<UltimatePortView, Edge> OnPortConnectionChange;
+
+        public UltimateNodeView(UltimateNodeData nodeData) : base()
         {
             this.NodeData = nodeData;
-            
+
             Button btn = new Button(() =>
             {
                 AddOutput("Test", Orientation.Horizontal, Port.Capacity.Single, typeof(Rect));
@@ -22,13 +22,11 @@ namespace UltimateNode.Editor
                 this.RefreshPorts();
             }) { text = "+" };
             this.titleContainer.Add(btn);
-            
-           
         }
 
         public override void UpdatePresenterPosition()
         {
-            this.NodeData.Position = this.GetPosition();    
+            this.NodeData.Position = this.GetPosition();
         }
 
         public override void SetPosition(Rect newPos)
@@ -37,42 +35,54 @@ namespace UltimateNode.Editor
             this.NodeData.Position = newPos;
         }
 
-        public Port AddOutput(
+        public UltimatePortView AddOutput(
             string portName,
             Orientation orientation,
             Port.Capacity capacity,
             System.Type type
         )
         {
-            Port port = InstantiatePort(orientation, Direction.Output, capacity, type);
+            UltimatePortView port =
+                UltimatePortView.Create<UltimateEdgeView>(orientation, Direction.Output, capacity, type);
             port.source = this;
             port.name = portName;
             port.portName = portName;
             outputContainer.Add(port);
+            RegisterPortCallback(port);
             return port;
         }
 
-        public Port AddInput(
+        public UltimatePortView AddInput(
             string portName,
             Orientation orientation,
             Port.Capacity capacity,
             System.Type type)
         {
-            Port port = InstantiatePort(orientation, Direction.Input, capacity, type);
+            UltimatePortView port =
+                UltimatePortView.Create<UltimateEdgeView>(orientation, Direction.Input, capacity, type);
             port.source = this;
             port.name = portName;
             port.portName = portName;
             inputContainer.Add(port);
+            RegisterPortCallback(port);
             return port;
         }
 
+        private void RegisterPortCallback(UltimatePortView p_Port)
+        {
+            p_Port.OnConnected += OnPortConnectionChange;
+            p_Port.OnDisconnected += OnPortConnectionChange;
+        }
+
+
         public void SetPosition(Vector2 position)
         {
-            this.SetPosition(new Rect(position,Vector2.zero));
+            this.SetPosition(new Rect(position, Vector2.zero));
         }
-        public Port GetInputPort(string portName)
+
+        public UltimatePortView GetInputPort(string portName)
         {
-            var port = this.inputContainer.Q<Port>(portName);
+            var port = this.inputContainer.Q<UltimatePortView>(portName);
             if (port == null)
             {
                 Debug.LogError($"this Node :{this.name} Get Input Port Name Error:{portName}, No such Port");
@@ -81,55 +91,15 @@ namespace UltimateNode.Editor
             return port;
         }
 
-        public Port GetOutputPort(string portName)
+        public UltimatePortView GetOutputPort(string portName)
         {
-            var port = this.outputContainer.Q<Port>(portName);
+            var port = this.outputContainer.Q<UltimatePortView>(portName);
             if (port == null)
             {
                 Debug.LogError($"this Node :{this.name} Get Output Port Name Error:{portName}, No such Port");
             }
 
             return port;
-        }
-
-        /// <summary>
-        /// this.Input connect to targetNode's output
-        /// </summary>
-        /// <param name="targetNode"></param>
-        /// <param name="inputPortName"></param>
-        /// <param name="outputPortName"></param>
-        /// <returns></returns>
-        public Edge ConnectInput(UltimateNodeBase targetNode, string inputPortName, string outputPortName)
-        {
-            var inputPort = this.GetInputPort(inputPortName);
-            var outputPort = targetNode.GetOutputPort(outputPortName);
-            var edge = new Edge()
-            {
-                input = inputPort,
-                output = outputPort,
-            };
-            OnPortConnectionChange?.Invoke();
-            return edge;
-        }
-
-        /// <summary>
-        /// this.output connect to targetNode's Input
-        /// </summary>
-        /// <param name="targetNode"></param>
-        /// <param name="inputPortName"></param>
-        /// <param name="outputPortName"></param>
-        /// <returns>Need be added to GraphView</returns>
-        public Edge ConnectOutput(UltimateNodeBase targetNode, string inputPortName, string outputPortName)
-        {
-            var inputPort = targetNode.GetInputPort(inputPortName);
-            var outputPort = this.GetOutputPort(outputPortName);
-            var edge = new Edge()
-            {
-                input = inputPort,
-                output = outputPort,
-            };
-            OnPortConnectionChange?.Invoke();
-            return edge;
         }
 
         public void ChangeInputPortColor(string portName, Color portColor)

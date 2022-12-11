@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -11,83 +9,43 @@ namespace UltimateNode.Editor
 {
     public static class UltimateNodeFactory
     {
+        /// <summary>
+        /// Load Graph View By Graph Data
+        /// </summary>
+        /// <param name="graphData"></param>
+        /// <param name="nodes"></param>
+        /// <param name="edges"></param>
         public static void LoadGraph(UltimateGraphData graphData,
-            out List<UltimateNodeBase> nodes, out List<Edge> edges, out List<Group> groups)
+            out List<UltimateNodeView> nodes, out List<UltimateEdgeView> edges)
         {
-            nodes = new List<UltimateNodeBase>();
-            edges = new List<Edge>();
-            groups = new List<Group>();
+            nodes = new List<UltimateNodeView>();
+            edges = new List<UltimateEdgeView>();
 
             for (var i = 0; i < graphData.Nodes.Count; i++)
             {
-                var ultimateNodeBase = LoadBaseNode(graphData.Nodes[i]);
+                var ultimateNodeBase = GenerateBaseNode(graphData.Nodes[i]);
                 nodes.Add(ultimateNodeBase);
             }
 
             for (var i = 0; i < graphData.Edges.Count; i++)
             {
-                var edgeData = graphData.Edges[i];
-                UltimateNodeBase inputNode = nodes.FirstOrDefault(x => x.GUID == edgeData.InputNodeGUID);
-                UltimateNodeBase outputNode = nodes.FirstOrDefault(x => x.GUID == edgeData.OutputNodeGUID);
-
-                if (inputNode != null && outputNode != null)
-                {
-                    var edge = inputNode.ConnectInput(outputNode, edgeData.InputPortName, edgeData.OutputPortName);
-                    edges.Add(edge);
-                }
-                else
-                {
-                    if (inputNode == null)
-                    {
-                        Debug.LogError($"Not Found Edge Connect Input Target:{edgeData.InputNodeGUID}");
-                    }
-
-                    if (outputNode == null)
-                    {
-                        Debug.LogError($"Not Found Edge Connect Output Target:{edgeData.OutputPortName}");
-                    }
-                }
-            }
-
-            for (var i = 0; i < graphData.Groups.Count; i++)
-            {
-                var group = graphData.Groups[i];
-                var loadGroup = LoadGroup(group);
-                groups.Add(loadGroup);
+                UltimateEdgeData ultimateEdgeData = graphData.Edges[i];
+                var newEdge = GenerateEdge(nodes, ultimateEdgeData);
+                edges.Add(newEdge);
             }
         }
 
         /// <summary>
-        /// Generate Node By Method 
-        /// </summary>
-        /// <param name="methodInfo"></param>
-        /// <param name="position"></param>
-        /// <returns></returns>
-        public static UltimateNodeBase GenerateBaseNode(MethodInfo methodInfo, Vector2 position)
-        {
-            // Init Node Data By Method Info 
-            UltimateNodeData nodeData = new UltimateNodeData(methodInfo)
-            {
-                GUID = Guid.NewGuid().ToString(),
-            };
-            UltimateNodeBase ultimateNodeBase = LoadBaseNode(nodeData);
-            ultimateNodeBase.SetPosition(position);
-            return ultimateNodeBase;
-        }
-
-
-        /// <summary>
-        /// Load Base Node By Node Data
+        /// Generate Base Node by Node Data
         /// </summary>
         /// <param name="nodeData"></param>
         /// <returns></returns>
-        public static UltimateNodeBase LoadBaseNode(UltimateNodeData nodeData)
+        public static UltimateNodeView GenerateBaseNode(UltimateNodeData nodeData)
         {
             // Add Entry Node
-            UltimateNodeBase loadedNode = new UltimateNodeBase(nodeData)
+            UltimateNodeView loadedNode = new UltimateNodeView(nodeData)
             {
                 title = nodeData.Name,
-                GUID = nodeData.GUID
             };
             loadedNode.SetPosition(nodeData.Position);
 
@@ -95,7 +53,7 @@ namespace UltimateNode.Editor
             for (var i = 0; i < nodeData.PortData.Count; i++)
             {
                 var portData = nodeData.PortData[i];
-                Port newPort = null;
+                UltimatePortView newPort = null;
                 var portValType = portData.PortValueType;
                 if (portData.PortType == PortType.Input)
                 {
@@ -125,6 +83,9 @@ namespace UltimateNode.Editor
                 if (portData.OriginVal == null)
                 {
                     Debug.Log("Null Port Origin Val");
+                }
+                else if (portData.PortType == PortType.Output)
+                {
                 }
                 else if (portValType == typeof(bool))
                 {
@@ -174,11 +135,15 @@ namespace UltimateNode.Editor
                     t.RegisterValueChangedCallback(x => { fieldInfo.SetValue(portData, x.newValue); });
                     element = t;
                 }
+                else if (portValType == typeof(FlowData))
+                {
+                }
                 else
                 {
                     Debug.LogError($"Parse Error Type:{portData.OriginVal.GetType()}");
                 }
 
+                newPort.InputElement = element;
                 if (element != null)
                 {
                     element.style.maxWidth = 100;
@@ -192,16 +157,48 @@ namespace UltimateNode.Editor
             return loadedNode;
         }
 
-
-        public static Group LoadGroup(UltimateGroupData groupData)
+        /// <summary>
+        /// Generate Edge By Edge Data
+        /// </summary>
+        /// <param name="allNodes"></param>
+        /// <param name="p_UltimateEdgeData"></param>
+        /// <returns></returns>
+        public static UltimateEdgeView GenerateEdge(List<UltimateNodeView> allNodes,
+            UltimateEdgeData p_UltimateEdgeData)
         {
-            Group g = new Group()
+            UltimateNodeView inputNode =
+                allNodes.FirstOrDefault(x => x.NodeData.GUID == p_UltimateEdgeData.InputNodeGUID);
+            UltimateNodeView outputNode =
+                allNodes.FirstOrDefault(x => x.NodeData.GUID == p_UltimateEdgeData.OutputNodeGUID);
+
+            if (inputNode != null && outputNode != null)
             {
-                name = groupData.Name,
-                autoUpdateGeometry = true,
-            };
-            g.SetPosition(groupData.Position);
-            return g;
+                var inputPort = inputNode.GetInputPort(p_UltimateEdgeData.InputPortName);
+                var outputPort = outputNode.GetOutputPort(p_UltimateEdgeData.OutputPortName);
+                var edge = new UltimateEdgeView(p_UltimateEdgeData)
+                {
+                    input = inputPort,
+                    output = outputPort,
+                };
+                inputPort.Connect(edge);
+                outputPort.Connect(edge);
+
+                return edge;
+            }
+            else
+            {
+                if (inputNode == null)
+                {
+                    Debug.LogError($"Not Found Edge Connect Input Target:{p_UltimateEdgeData.InputNodeGUID}");
+                }
+
+                if (outputNode == null)
+                {
+                    Debug.LogError($"Not Found Edge Connect Output Target:{p_UltimateEdgeData.OutputPortName}");
+                }
+            }
+
+            return null;
         }
     }
 }

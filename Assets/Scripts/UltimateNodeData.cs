@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -24,6 +25,9 @@ namespace UltimateNode
         public Rect Position;
         public List<PortData> PortData;
 
+        public string ClassFullName;
+        public string MethodFullName;
+
         public UltimateNodeData()
         {
             PortData = new List<PortData>();
@@ -32,40 +36,75 @@ namespace UltimateNode
         public UltimateNodeData(MethodInfo methodInfo) : this()
         {
             Name = methodInfo.Name;
+            
+            this.ClassFullName = methodInfo.DeclaringType.FullName;
+            this.MethodFullName = methodInfo.Name;
 
-            // Input Port
+
+            // Input/Output Port
             var parameterInfos = methodInfo.GetParameters();
             for (var i = 0; i < parameterInfos.Length; i++)
             {
-                var parameterInfo = parameterInfos[i];
+                ParameterInfo parameterInfo = parameterInfos[i];
+                var customAttributes = parameterInfo.GetCustomAttributes(typeof(MultiPortAttribute));
+                int capacity = customAttributes.Any() ? 1 : 0; 
+                
+                PortType portType = PortType.Input;
+
+                var realParameterType = parameterInfo.ParameterType;
+                if (realParameterType.IsByRef)
+                {
+                    realParameterType = realParameterType.GetElementType();
+                    portType = PortType.Output;
+                }
+
                 this.PortData.Add(new PortData()
                 {
-                    Capacity = 0,
+                    Capacity = capacity,
                     Orientation = 0,
                     PortName = parameterInfo.Name,
-                    PortType = PortType.Input,
-                    PortValueType = parameterInfo.ParameterType,
+                    PortType = portType,
+                    PortValueType = realParameterType,
                     OriginVal = parameterInfo.ParameterType.IsValueType
                         ? Activator.CreateInstance(parameterInfo.ParameterType)
                         : null,
                 });
             }
 
-            // Output Port
+            // Return Port
             if ((methodInfo.ReturnParameter.ParameterType != typeof(void)))
             {
-                var returnType = methodInfo.ReturnType;
+                var returnType = methodInfo.ReturnParameter.ParameterType;
                 this.PortData.Add(new PortData()
                 {
                     Capacity = 0,
                     Orientation = 0,
                     PortName = methodInfo.ReturnParameter.Name,
                     PortType = PortType.Output,
-                    PortValueType = methodInfo.ReturnType,
+                    PortValueType = returnType,
                     OriginVal = methodInfo.ReturnType.IsValueType
                         ? Activator.CreateInstance(methodInfo.ReturnType)
                         : null,
                 });
+            }
+        }
+
+        public void Execute()
+        {
+            Debug.Log($"Execute:{Name}");
+            var targetClass = Assembly.GetExecutingAssembly().GetType(ClassFullName);
+            var method = targetClass.GetMethod(this.MethodFullName,
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            
+            object[] inputData = new object[this.PortData.Count];
+            for (var i = 0; i < this.PortData.Count; i++)
+            {
+                inputData[i] = this.PortData[i].OriginVal;
+            }
+            method.Invoke(null, inputData);
+            for (var i = 0; i < this.PortData.Count; i++)
+            {
+                this.PortData[i].OriginVal = inputData[i];
             }
         }
     }
@@ -77,14 +116,12 @@ namespace UltimateNode
     public class UltimateGraphData
     {
         public List<UltimateNodeData> Nodes;
-        public List<UltimateGroupData> Groups; 
-        public List<EdgeData> Edges;
+        public List<UltimateEdgeData> Edges;
 
         public UltimateGraphData()
         {
             Nodes = new List<UltimateNodeData>();
-            Edges = new List<EdgeData>();
-            Groups = new List<UltimateGroupData>();
+            Edges = new List<UltimateEdgeData>();
         }
     }
 
@@ -116,7 +153,7 @@ namespace UltimateNode
     }
 
     [System.Serializable]
-    public class EdgeData
+    public class UltimateEdgeData
     {
         public string InputNodeGUID;
         public string OutputNodeGUID;
@@ -128,6 +165,6 @@ namespace UltimateNode
     {
         None,
         Input,
-        Output
+        Output,
     }
 }

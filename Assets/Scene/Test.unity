@@ -150,11 +150,161 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 359be8fa46f7478ba0ad53df43b13971, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  JsonData: 
+  JsonData: '{"Nodes":[{"Name":"OnStart","GUID":"9ece1212-0be2-4941-9727-8f8196a737d6","Position":{"xMin":92.0,"yMin":-112.0,"xMax":217.0,"yMax":-35.0},"PortData":[{"PortName":"Start","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":{"$type":"UltimateNode.FlowData","$id":"5"}}],"ClassFullName":"UltimateNode.FlowControl","MethodFullName":"OnStart"},{"Name":"Select","GUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","Position":{"xMin":297.0,"yMin":-104.0,"xMax":410.0,"yMax":-27.0},"PortData":[{"PortName":"i","PortValueType":"UltimateNode.FlowData","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}},{"PortName":"o","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":1,"OriginVal":{"$ref":"5"}}],"ClassFullName":"UltimateNode.AI","MethodFullName":"Select"},{"Name":"ConditionHPRange","GUID":"d1949ef6-36c4-4a98-8213-fc94c490bb99","Position":{"xMin":521.0,"yMin":-109.0,"xMax":707.0,"yMax":16.0},"PortData":[{"PortName":"i","PortValueType":"UltimateNode.FlowData","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}},{"PortName":"min","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":0.0,"$type":"System.Single"}},{"PortName":"max","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":0.0,"$type":"System.Single"}},{"PortName":"True","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":null},{"PortName":"False","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}}],"ClassFullName":"UltimateNode.AI","MethodFullName":"ConditionHPRange"},{"Name":"ConditionHPRange","GUID":"c523c94d-f36e-4deb-afdb-ec6c501310ef","Position":{"xMin":536.0,"yMin":48.0,"xMax":722.0,"yMax":173.0},"PortData":[{"PortName":"i","PortValueType":"UltimateNode.FlowData","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}},{"PortName":"min","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":1.0,"$type":"System.Single"}},{"PortName":"max","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":0.0,"$type":"System.Single"}},{"PortName":"True","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":null},{"PortName":"False","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}}],"ClassFullName":"UltimateNode.AI","MethodFullName":"ConditionHPRange"},{"Name":"ConditionHPRange","GUID":"2316a177-db9a-48ad-98cb-a19e2b2b98e0","Position":{"xMin":527.0,"yMin":-272.0,"xMax":714.0,"yMax":-147.0},"PortData":[{"PortName":"i","PortValueType":"UltimateNode.FlowData","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}},{"PortName":"min","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":2.0,"$type":"System.Single"}},{"PortName":"max","PortValueType":"System.Single","PortType":"Input","Orientation":0,"Capacity":0,"OriginVal":{"$content":0.0,"$type":"System.Single"}},{"PortName":"True","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":null},{"PortName":"False","PortValueType":"UltimateNode.FlowData","PortType":"Output","Orientation":0,"Capacity":0,"OriginVal":{"$ref":"5"}}],"ClassFullName":"UltimateNode.AI","MethodFullName":"ConditionHPRange"}],"Edges":[{"InputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","OutputNodeGUID":"9ece1212-0be2-4941-9727-8f8196a737d6","InputPortName":"i","OutputPortName":"Start"},{"InputNodeGUID":"d1949ef6-36c4-4a98-8213-fc94c490bb99","OutputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","InputPortName":"i","OutputPortName":"o"},{"InputNodeGUID":"d1949ef6-36c4-4a98-8213-fc94c490bb99","OutputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","InputPortName":"i","OutputPortName":"o"},{"InputNodeGUID":"d1949ef6-36c4-4a98-8213-fc94c490bb99","OutputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","InputPortName":"i","OutputPortName":"o"},{"InputNodeGUID":"c523c94d-f36e-4deb-afdb-ec6c501310ef","OutputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","InputPortName":"i","OutputPortName":"o"},{"InputNodeGUID":"2316a177-db9a-48ad-98cb-a19e2b2b98e0","OutputNodeGUID":"7459cf43-0f66-4bcf-84d7-e1e9816baf99","InputPortName":"i","OutputPortName":"o"}]}'
   graphData:
-    Nodes: []
-    Groups: []
-    Edges: []
+    Nodes:
+    - Name: OnStart
+      GUID: 9ece1212-0be2-4941-9727-8f8196a737d6
+      Position:
+        serializedVersion: 2
+        x: 92
+        y: -112
+        width: 125
+        height: 77
+      PortData:
+      - PortName: Start
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      ClassFullName: UltimateNode.FlowControl
+      MethodFullName: OnStart
+    - Name: Select
+      GUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      Position:
+        serializedVersion: 2
+        x: 297
+        y: -104
+        width: 113
+        height: 77
+      PortData:
+      - PortName: i
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: o
+        PortType: 2
+        Orientation: 0
+        Capacity: 1
+      ClassFullName: UltimateNode.AI
+      MethodFullName: Select
+    - Name: ConditionHPRange
+      GUID: d1949ef6-36c4-4a98-8213-fc94c490bb99
+      Position:
+        serializedVersion: 2
+        x: 521
+        y: -109
+        width: 186
+        height: 125
+      PortData:
+      - PortName: i
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: min
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: max
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: True
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      - PortName: False
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      ClassFullName: UltimateNode.AI
+      MethodFullName: ConditionHPRange
+    - Name: ConditionHPRange
+      GUID: c523c94d-f36e-4deb-afdb-ec6c501310ef
+      Position:
+        serializedVersion: 2
+        x: 536
+        y: 48
+        width: 186
+        height: 125
+      PortData:
+      - PortName: i
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: min
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: max
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: True
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      - PortName: False
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      ClassFullName: UltimateNode.AI
+      MethodFullName: ConditionHPRange
+    - Name: ConditionHPRange
+      GUID: 2316a177-db9a-48ad-98cb-a19e2b2b98e0
+      Position:
+        serializedVersion: 2
+        x: 527
+        y: -272
+        width: 187
+        height: 125
+      PortData:
+      - PortName: i
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: min
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: max
+        PortType: 1
+        Orientation: 0
+        Capacity: 0
+      - PortName: True
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      - PortName: False
+        PortType: 2
+        Orientation: 0
+        Capacity: 0
+      ClassFullName: UltimateNode.AI
+      MethodFullName: ConditionHPRange
+    Edges:
+    - InputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      OutputNodeGUID: 9ece1212-0be2-4941-9727-8f8196a737d6
+      InputPortName: i
+      OutputPortName: Start
+    - InputNodeGUID: d1949ef6-36c4-4a98-8213-fc94c490bb99
+      OutputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      InputPortName: i
+      OutputPortName: o
+    - InputNodeGUID: d1949ef6-36c4-4a98-8213-fc94c490bb99
+      OutputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      InputPortName: i
+      OutputPortName: o
+    - InputNodeGUID: d1949ef6-36c4-4a98-8213-fc94c490bb99
+      OutputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      InputPortName: i
+      OutputPortName: o
+    - InputNodeGUID: c523c94d-f36e-4deb-afdb-ec6c501310ef
+      OutputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      InputPortName: i
+      OutputPortName: o
+    - InputNodeGUID: 2316a177-db9a-48ad-98cb-a19e2b2b98e0
+      OutputNodeGUID: 7459cf43-0f66-4bcf-84d7-e1e9816baf99
+      InputPortName: i
+      OutputPortName: o
 --- !u!4 &684276327
 Transform:
   m_ObjectHideFlags: 0

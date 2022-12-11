@@ -1,6 +1,4 @@
-﻿using System;
-using UnityEditor;
-using UnityEditor.UIElements;
+﻿using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -15,12 +13,12 @@ namespace UltimateNode.Editor
             window.titleContent = new GUIContent("UltimateWindow");
         }
 
-        private UltimateGraphViewBase m_GraphView;
+        private UltimateGraphView m_GraphView;
 
         private void OnEnable()
         {
             // Add a graph view
-            m_GraphView = new UltimateGraphViewBase(this)
+            m_GraphView = new UltimateGraphView(this)
             {
                 name = "UltimateGraphView"
             };
@@ -29,55 +27,12 @@ namespace UltimateNode.Editor
             rootVisualElement.Add(m_GraphView);
 
             m_GraphView.Add(new MiniMapView(m_GraphView));
-
+            
             // Add a button to the toolbar
             // after the graph view, so it's could covered by the graph view
-            AddToolbar();
+            this.rootVisualElement.Add(new ToolbarView(this.m_GraphView));
             
-            
         }
-
-        void AddToolbar()
-        {
-            var toolbar = new Toolbar();
-            rootVisualElement.Add(toolbar);
-
-            toolbar.Add(AddBtn("Add CommitGraphNode", () =>
-            {
-                var group = new CommitGraphNode()
-                {
-                };
-                m_GraphView.AddElement(group);
-            }));
-
-            var objectField = new ObjectField()
-            {
-                objectType = typeof(TestMono)
-            };
-            toolbar.Add(objectField);
-
-            toolbar.Add(AddBtn("Add Node By Json", () =>
-            {
-                TestMono mono = objectField.value as TestMono;
-                mono.LoadFromStr();
-                var data = mono.graphData;
-                // Test Load Graph 
-                UltimateNodeFactory.LoadGraph(data, out var nodes,
-                    out var edges, out var groups);
-                nodes.ForEach(x => { m_GraphView.AddElement(x); });
-                edges.ForEach(x => { m_GraphView.AddElement(x); });
-                groups.ForEach(x => { m_GraphView.AddElement(x); });
-            }));
-        }
-
-        Button AddBtn(string btnName, Action onclick)
-        {
-            return new Button(onclick)
-            {
-                text = btnName
-            };
-        }
-
         private void OnDisable()
         {
             rootVisualElement.Remove(m_GraphView);
