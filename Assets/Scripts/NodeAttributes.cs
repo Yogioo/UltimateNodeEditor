@@ -33,6 +33,11 @@ namespace UltimateNode
     public class MultiPortAttribute : Attribute
     {
     }
+
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
+    public class HidePortAttribute : Attribute
+    {
+    }
     //
     // [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false,
     //     Inherited = false)]

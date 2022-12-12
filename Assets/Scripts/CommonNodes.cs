@@ -31,5 +31,14 @@
 
     public class FlowData
     {
+    
+    }
+
+    public class AIFlowData
+    {
+        /// <summary>
+        /// Return Value of Action Or Condition Node
+        /// </summary>
+        public bool ReturnValue = false;
     }
 }

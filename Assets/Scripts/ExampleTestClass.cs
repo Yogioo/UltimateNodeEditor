@@ -35,36 +35,39 @@ namespace UltimateNode
     [NodeGroup]
     public static class AI
     {
-        public static void Select(FlowData i, [MultiPort] out FlowData o)
+        public static void OnAIThink([MultiPort] ref AIFlowData o)
+        {
+            o = new AIFlowData();
+        }
+
+        public static void Select(AIFlowData i, [MultiPort] ref AIFlowData o)
         {
             o = i;
         }
 
-        public static void ConditionHPRange(FlowData i, float min, float max, out FlowData True,
-            out FlowData False)
+        public static void Sequence(AIFlowData i, [MultiPort] ref AIFlowData o)
+        {
+            o = i;
+        }
+
+        public static void ConditionHPRange(AIFlowData i, float min, float max, [HidePort] ref AIFlowData o)
         {
             Debug.Log(min);
             float playerHP = 0.5f;
-            True = False = null;
             var condition = min < playerHP && playerHP < max;
-            if (condition)
-            {
-                True = i;
-            }
-            else
-            {
-                False = i;
-            }
+            o.ReturnValue = condition;
         }
 
-        public static void ActionEat(FlowData i)
+        public static void ActionEat(AIFlowData i, [HidePort] ref AIFlowData o)
         {
+            o.ReturnValue = true;
             Debug.Log("Player Eating");
         }
 
-        public static void ActionWalk(FlowData i)
+        public static void ActionWalk(AIFlowData i, [HidePort] ref AIFlowData o)
         {
-            Debug.Log("Player Walking");
+            o.ReturnValue = false;
+            Debug.Log("Player Walking False");
         }
     }
 }

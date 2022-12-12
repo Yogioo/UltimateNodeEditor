@@ -15,15 +15,23 @@ namespace UltimateNode
 
         public void Play()
         {
-            UltimateNodeData startNode = m_Data.Nodes.First(
+            UltimateNodeData startNode = m_Data.Nodes.FirstOrDefault(
                 x => x.Name == nameof(FlowControl.OnStart));
-            InvokeByProcess(startNode);
+            if (startNode != null)
+            {
+                InvokeOnStartByProcess(startNode);
+            }
+
+
+            var aiThinkNode = m_Data.Nodes.FirstOrDefault(x => x.Name == nameof(AI.OnAIThink));
+            if (aiThinkNode != null)
+            {
+                InvokeOnAIThinkByProcess(aiThinkNode, new AIFlowData());
+            }
         }
 
-        private void InvokeByProcess(UltimateNodeData targetNode)
+        private void InvokeOnStartByProcess(UltimateNodeData targetNode)
         {
-            // targetNode.Execute();
-
             List<UltimateNodeData> needExeNode = new List<UltimateNodeData>();
             needExeNode.Add(targetNode);
 
@@ -99,8 +107,92 @@ namespace UltimateNode
                     }
                 }
 
-                needExeNode = cache.OrderBy(x => x.Position.position.y).ToList();
+                needExeNode = OrderNodes(cache);
             }
+        }
+
+        private bool InvokeOnAIThinkByProcess(UltimateNodeData currentNode,AIFlowData p_FlowData)
+        {
+            var outputNodeData = currentNode;
+            //1. Check Child Node Return Value, If it's True, return
+
+            // 1. Get Output Port
+            var outputPort = outputNodeData.PortData.FirstOrDefault(x =>
+                x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+            Debug.Log(outputPort.PortName);
+
+            // 2. Get Connection Input Nodes
+            var connectionNodes = new List<UltimateNodeData>();
+            foreach (var edgeData in m_Data.Edges)
+            {
+                if (edgeData.OutputNodeGUID == outputNodeData.GUID)
+                {
+                    var inputNode = m_Data.GetNodeByGUID(edgeData.InputNodeGUID);
+                    connectionNodes.Add(inputNode);
+                }
+            }
+
+            connectionNodes = OrderNodes(connectionNodes);
+
+            for (var i = 0; i < connectionNodes.Count; i++)
+            {
+                var node = connectionNodes[i];
+
+                // Modify Node Not Execute
+                if (node.Name == nameof(AI.Sequence) || node.Name == nameof(AI.Select))
+                {
+                    return InvokeOnAIThinkByProcess(node, p_FlowData);
+                }
+                else
+                {
+                    var actionOrConditionOutputPort = node.PortData.FirstOrDefault(x =>
+                        x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+                    actionOrConditionOutputPort.OriginVal = p_FlowData;
+                    node.Execute();
+
+                    if (currentNode.Name == nameof(AI.Sequence))
+                    {
+                        // Sequence
+                        if (p_FlowData.ReturnValue)
+                        {
+                            //Continue
+                        }
+                        else
+                        {
+                            //Break
+                            return false;
+                        }
+                    }
+                    else if (currentNode.Name == nameof(AI.Select))
+                    {
+                        // Select Break
+                        if (p_FlowData.ReturnValue)
+                        {
+                            //Break
+                            return false;
+                        }
+                        else
+                        {
+                            //Continue
+                        }
+                    }
+                    else
+                    {
+                        return p_FlowData.ReturnValue;
+                    }
+                }
+            }
+
+            var currentOutputPort = outputNodeData.PortData.FirstOrDefault(x =>
+                x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+            currentOutputPort.OriginVal = p_FlowData;
+            outputNodeData.Execute();
+            return p_FlowData.ReturnValue;
+        }
+
+        private static List<UltimateNodeData> OrderNodes(List<UltimateNodeData> connectionNodes)
+        {
+            return connectionNodes.OrderBy(x => x.Position.position.y).ToList();
         }
     }
 }

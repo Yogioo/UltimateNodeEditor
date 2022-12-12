@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Windows.WebCam;
 
 namespace UltimateNode
 {
@@ -28,6 +30,24 @@ namespace UltimateNode
         public string ClassFullName;
         public string MethodFullName;
 
+        private MethodInfo m_MethodInfo
+        {
+            get
+            {
+                if (_MethodInfo == null)
+                {
+                    var targetClass = Assembly.GetExecutingAssembly().GetType(ClassFullName);
+                    _MethodInfo = targetClass.GetMethod(this.MethodFullName,
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                }
+
+                return _MethodInfo;
+            }
+        }
+
+        private MethodInfo _MethodInfo;
+
+
         public UltimateNodeData()
         {
             PortData = new List<PortData>();
@@ -36,10 +56,9 @@ namespace UltimateNode
         public UltimateNodeData(MethodInfo methodInfo) : this()
         {
             Name = methodInfo.Name;
-            
+
             this.ClassFullName = methodInfo.DeclaringType.FullName;
             this.MethodFullName = methodInfo.Name;
-
 
             // Input/Output Port
             var parameterInfos = methodInfo.GetParameters();
@@ -47,8 +66,8 @@ namespace UltimateNode
             {
                 ParameterInfo parameterInfo = parameterInfos[i];
                 var customAttributes = parameterInfo.GetCustomAttributes(typeof(MultiPortAttribute));
-                int capacity = customAttributes.Any() ? 1 : 0; 
-                
+                int capacity = customAttributes.Any() ? 1 : 0;
+
                 PortType portType = PortType.Input;
 
                 var realParameterType = parameterInfo.ParameterType;
@@ -92,16 +111,14 @@ namespace UltimateNode
         public void Execute()
         {
             Debug.Log($"Execute:{Name}");
-            var targetClass = Assembly.GetExecutingAssembly().GetType(ClassFullName);
-            var method = targetClass.GetMethod(this.MethodFullName,
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            
+
             object[] inputData = new object[this.PortData.Count];
             for (var i = 0; i < this.PortData.Count; i++)
             {
                 inputData[i] = this.PortData[i].OriginVal;
             }
-            method.Invoke(null, inputData);
+
+            m_MethodInfo.Invoke(null, inputData);
             for (var i = 0; i < this.PortData.Count; i++)
             {
                 this.PortData[i].OriginVal = inputData[i];
@@ -123,7 +140,13 @@ namespace UltimateNode
             Nodes = new List<UltimateNodeData>();
             Edges = new List<UltimateEdgeData>();
         }
+
+        public UltimateNodeData GetNodeByGUID(string guid)
+        {
+            return this.Nodes.FirstOrDefault(x => x.GUID == guid);
+        }
     }
+
 
     [System.Serializable]
     public class PortData
