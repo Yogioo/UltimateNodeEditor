@@ -28,28 +28,32 @@ namespace UltimateNode.Editor
         public List<SearchTreeEntry> CreateSearchTree(SearchWindowContext context)
         {
             List<SearchTreeEntry> searchTreeEntries = new List<SearchTreeEntry>();
-            searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Search Class"), 1));
-            searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Custom Node"), 2));
-            AddNodeGroupByAttributeType(GetTypesByAttribute(), searchTreeEntries, 3);
+            searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Ultimate Node"), 0));
+            searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Tool Node"), 1));
+            searchTreeEntries.Add(new SearchTreeEntry(new GUIContent("Group")){level = 2,userData =  ToolNodeType.Group});
+            AddNodeGroupByAttributeType(GetTypesByAttribute(), searchTreeEntries, 1);
             return searchTreeEntries;
         }
-        
+
         private List<Type> GetTypesByAttribute()
         {
-            List<Type> result= new List<Type>();
+            List<Type> result = new List<Type>();
             var executingAssembly = Assembly.GetAssembly(typeof(UltimateNodeData));
             var types = executingAssembly.GetTypes();
             foreach (var type in types)
             {
-                var customAttributes = type.GetCustomAttributes(typeof(NodeGroupAttribute),true);
+                var customAttributes = type.GetCustomAttributes(typeof(NodeGroupAttribute), true);
                 if (customAttributes.Length > 0)
                 {
                     result.Add(type);
                 }
             }
+
             return result;
         }
-        private void AddNodeGroupByAttributeType(List<Type> p_Types, List<SearchTreeEntry> searchTreeEntries, int levelCount)
+
+        private void AddNodeGroupByAttributeType(List<Type> p_Types, List<SearchTreeEntry> searchTreeEntries,
+            int levelCount)
         {
             foreach (var targetClass in p_Types)
             {
@@ -80,7 +84,6 @@ namespace UltimateNode.Editor
                     };
                     searchTreeEntries.Add(searchTreeEntry);
                 }
-
             }
         }
 
@@ -96,17 +99,22 @@ namespace UltimateNode.Editor
                     {
                         GUID = Guid.NewGuid().ToString(),
                     };
-                    m_GraphView.AddNode(nodeData, localMousePosition);
+                    m_GraphView.AddNodeData(nodeData);
+                    m_GraphView.AddNodeView(nodeData, localMousePosition);
                     return true;
-
-                case "Test":
-                    Debug.Log("Test Success");
+                case ToolNodeType toolNodeType:
+                   
                     return true;
                 default:
                     break;
             }
 
             return false;
+        }
+        
+        private enum ToolNodeType
+        {
+            Group,
         }
     }
 }

@@ -36,7 +36,7 @@ namespace UltimateNode.Editor
             
             this.Add(AddBtn("Clear All", () =>
             {
-                m_GraphView.RemoveAll();
+                m_GraphView.RemoveAllDataAndView();
             }));
         }
 

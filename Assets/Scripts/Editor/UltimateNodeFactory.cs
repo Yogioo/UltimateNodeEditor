@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -12,31 +13,29 @@ namespace UltimateNode.Editor
         /// <summary>
         /// Load Graph View By Graph Data
         /// </summary>
-        /// <param name="graphData"></param>
+        /// <param name="p_UltimateGraphView"></param>
+        /// <param name="p_GraphData"></param>
         /// <param name="nodes"></param>
         /// <param name="edges"></param>
-        public static void LoadGraph(UltimateGraphData graphData,
-            out List<UltimateNodeView> nodes, out List<UltimateEdgeView> edges)
+        public static void LoadGraph(UltimateGraphView p_UltimateGraphView, UltimateGraphData p_GraphData)
         {
-            nodes = new List<UltimateNodeView>();
-            edges = new List<UltimateEdgeView>();
-
-            for (var i = 0; i < graphData.Nodes.Count; i++)
+            var nodes = new List<UltimateNodeView>();
+           
+            foreach (var nodeData in p_GraphData.Nodes)
             {
-                var ultimateNodeBase = GenerateBaseNode(graphData.Nodes[i]);
-                nodes.Add(ultimateNodeBase);
+                var ultimateNodeView = p_UltimateGraphView.AddNodeView(nodeData);
+                nodes.Add(ultimateNodeView);
             }
 
-            for (var i = 0; i < graphData.Edges.Count; i++)
+            foreach (var edgeData in p_GraphData.Edges)
             {
-                UltimateEdgeData ultimateEdgeData = graphData.Edges[i];
-                var newEdge = GenerateEdge(nodes, ultimateEdgeData);
-                edges.Add(newEdge);
+                p_UltimateGraphView.AddEdgeView(edgeData);
             }
         }
 
         /// <summary>
         /// Generate Base Node by Node Data
+        /// Data => View
         /// </summary>
         /// <param name="nodeData"></param>
         /// <returns></returns>
@@ -49,7 +48,6 @@ namespace UltimateNode.Editor
             };
             loadedNode.SetPosition(nodeData.Position);
 
-            // loadedNode.portData = new Dictionary<string, MemberInfo>();
             for (var i = 0; i < nodeData.PortData.Count; i++)
             {
                 var portData = nodeData.PortData[i];
@@ -159,6 +157,7 @@ namespace UltimateNode.Editor
 
         /// <summary>
         /// Generate Edge By Edge Data
+        /// Data => View
         /// </summary>
         /// <param name="allNodes"></param>
         /// <param name="p_UltimateEdgeData"></param>

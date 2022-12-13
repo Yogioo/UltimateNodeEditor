@@ -8,8 +8,8 @@ namespace UltimateNode.Editor
     public class UltimateNodeView : Node
     {
         public UltimateNodeData NodeData;
-
         public event Action<UltimatePortView, Edge> OnPortConnectionChange;
+        public event Action<UltimateNodeView> OnDisconnectAllPorts,OnDisconnectInputPorts,OnDisconnectOutputPorts;
 
         public UltimateNodeView(UltimateNodeData nodeData) : base()
         {
@@ -24,6 +24,7 @@ namespace UltimateNode.Editor
             this.titleContainer.Add(btn);
         }
 
+
         public override void UpdatePresenterPosition()
         {
             this.NodeData.Position = this.GetPosition();
@@ -33,6 +34,15 @@ namespace UltimateNode.Editor
         {
             base.SetPosition(newPos);
             this.NodeData.Position = newPos;
+        }
+
+        public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+        {
+            // not need Disconnect all 
+            // base.BuildContextualMenu(evt);
+            evt.menu.AppendAction("Disconnect All Ports", p_Action => { OnDisconnectAllPorts?.Invoke(this); });
+            evt.menu.AppendAction("Disconnect Input Ports", p_Action => { OnDisconnectInputPorts?.Invoke(this); });
+            evt.menu.AppendAction("Disconnect Output Ports", p_Action => { OnDisconnectOutputPorts?.Invoke(this); });
         }
 
         public UltimatePortView AddOutput(
@@ -73,7 +83,6 @@ namespace UltimateNode.Editor
             p_Port.OnConnected += OnPortConnectionChange;
             p_Port.OnDisconnected += OnPortConnectionChange;
         }
-
 
         public void SetPosition(Vector2 position)
         {
