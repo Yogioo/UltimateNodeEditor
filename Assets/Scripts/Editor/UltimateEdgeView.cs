@@ -8,7 +8,7 @@ namespace UltimateNode.Editor
         {
         }
 
-        private UltimateEdgeData m_Data;
+        public UltimateEdgeData EdgeData;
 
         public UltimateEdgeView(UltimateEdgeData p_data)
         {
@@ -17,7 +17,7 @@ namespace UltimateNode.Editor
 
         public void Init(UltimateEdgeData p_data)
         {
-            this.m_Data = p_data;
+            this.EdgeData = p_data;
         }
     }
 }

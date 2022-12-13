@@ -33,6 +33,11 @@ namespace UltimateNode.Editor
                 var data = mono.graphData;
                 m_GraphView.Init(data);
             }));
+            
+            this.Add(AddBtn("Clear All", () =>
+            {
+                m_GraphView.RemoveAll();
+            }));
         }
 
         Button AddBtn(string btnName, Action onclick)

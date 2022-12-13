@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using FullSerializer;
+using NUnit.Framework;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -26,25 +27,27 @@ namespace UltimateNode.Editor
             AddBackground();
             // Add View Control
             AddManipulators();
-
+            
             AddSearchWindow();
 
             //Copy And Paste Node
             serializeGraphElements += CutCopy;
             canPasteSerializedData += AllowPaste;
             unserializeAndPaste += OnPaste;
-            
+            deleteSelection += OnDeleteCallback;
+
             Init(new UltimateGraphData());
         }
+
 
         public void ClearAllNodeAndEdge()
         {
             m_AllNodes.ForEach(this.RemoveElement);
             m_AllEdges.ForEach(this.RemoveElement);
         }
+
         public void Init(UltimateGraphData p_GraphData)
         {
-
             ClearAllNodeAndEdge();
             this.m_GraphData = p_GraphData;
 
@@ -60,13 +63,13 @@ namespace UltimateNode.Editor
         /// <param name="nodeData"></param>
         /// <param name="position"></param>
         /// <returns></returns>
-        public UltimateNodeView AddNode(UltimateNodeData nodeData,Vector2 position)
+        public UltimateNodeView AddNode(UltimateNodeData nodeData, Vector2 position)
         {
             var ultimateNodeBase = this.AddNode(nodeData);
             ultimateNodeBase.SetPosition(position);
             return ultimateNodeBase;
         }
-        
+
         /// <summary>
         /// Add Node To Data And View
         /// </summary>
@@ -76,6 +79,7 @@ namespace UltimateNode.Editor
         {
             m_GraphData.Nodes.Add(nodeData);
             UltimateNodeView ultimateNodeView = UltimateNodeFactory.GenerateBaseNode(nodeData);
+            this.m_AllNodes.Add(ultimateNodeView);
             this.AddElement(ultimateNodeView);
             return ultimateNodeView;
         }
@@ -89,7 +93,7 @@ namespace UltimateNode.Editor
         {
             AddEdgeData(p_UltimateEdgeData);
             var generateEdge = UltimateNodeFactory.GenerateEdge(m_AllNodes, p_UltimateEdgeData);
-            this.AddElement(generateEdge);
+            AddEdgeView(generateEdge);
             return generateEdge;
         }
 
@@ -97,8 +101,61 @@ namespace UltimateNode.Editor
         {
             m_GraphData.Edges.Add(p_UltimateEdgeData);
         }
-        
-        #region Copy Paste
+
+        public void AddEdgeView(UltimateEdgeView p_EdgeView)
+        {
+            this.m_AllEdges.Add(p_EdgeView);
+            this.AddElement(p_EdgeView);
+        }
+
+        private void RemoveNodeViews(List<UltimateNodeView> nodeViews)
+        {
+            foreach (var ultimateNodeView in nodeViews)
+            {
+                this.m_AllNodes.Remove(ultimateNodeView);
+                this.m_GraphData.Nodes.Remove(ultimateNodeView.NodeData);
+            }
+            this.DeleteElements(nodeViews);
+        }
+
+        private void RemoveEdgeViews(List<UltimateEdgeView> edgeViews)
+        {
+            foreach (var ultimateEdgeView in edgeViews)
+            {
+                this.m_AllEdges.Remove(ultimateEdgeView);
+                this.m_GraphData.Edges.Remove(ultimateEdgeView.EdgeData);
+            }
+            this.DeleteElements(edgeViews);
+        }
+
+        public void RemoveAll()
+        {
+            RemoveEdgeViews(new List<UltimateEdgeView>(this.m_AllEdges));
+            RemoveNodeViews(new List<UltimateNodeView>(this.m_AllNodes));
+        }
+
+        #region Callback
+
+        private void OnDeleteCallback(string p_Operationname, AskUser p_Askuser)
+        {
+            List<UltimateNodeView> needDeleteNodeViews = new List<UltimateNodeView>();
+            List<UltimateEdgeView> needDeleteEdgeViews = new List<UltimateEdgeView>();
+            for (var i = 0; i < selection.Count; i++)
+            {
+                var graphElement = selection[i];
+                if (graphElement is UltimateNodeView n)
+                {
+                    needDeleteNodeViews.Add(n);
+                }
+                else if (graphElement is UltimateEdgeView e)
+                {
+                    needDeleteEdgeViews.Add(e);
+                }
+            }
+
+            RemoveNodeViews(needDeleteNodeViews);
+            RemoveEdgeViews(needDeleteEdgeViews);
+        }
 
         /// <summary>
         /// Check Node Can be paste
@@ -223,6 +280,7 @@ namespace UltimateNode.Editor
             );
             return manipulator;
         }
+
         /// <summary>
         /// Override this can make edge enable to connect
         /// </summary>
@@ -237,7 +295,7 @@ namespace UltimateNode.Editor
                 pot.node != startPort.node &&
                 pot.portType == startPort.portType).ToList();
         }
-        
+
         #endregion
 
         #region Func

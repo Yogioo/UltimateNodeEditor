@@ -127,13 +127,15 @@ namespace UltimateNode.Editor
                             InputPortName = inputPort.portName,
                             OutputPortName = outputPort.portName,
                         };
+                        // var ultimateEdgeView = u.AddEdge(ultimateEdgeData);
                         u.AddEdgeData(ultimateEdgeData);
                         var ultimateEdgeView = edge as UltimateEdgeView;
                         ultimateEdgeView.Init(ultimateEdgeData);
+                        u.AddEdgeView(ultimateEdgeView);
 
-                        graphView.AddElement((GraphElement)edge1);
-                        inputPort.Connect(edge1);
-                        outputPort.Connect(edge1);
+                        // graphView.AddElement((GraphElement)edge1);
+                        inputPort.Connect(ultimateEdgeView);
+                        outputPort.Connect(ultimateEdgeView);
                     }
                 }
             }
