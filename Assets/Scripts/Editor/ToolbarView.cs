@@ -26,7 +26,7 @@ namespace UltimateNode.Editor
             };
             this.Add(objectField);
 
-            this.Add(AddBtn("Add Node By Json", () =>
+            this.Add(AddBtn("Load", () =>
             {
                 TestMono mono = objectField.value as TestMono;
                 mono.LoadFromStr();
@@ -34,10 +34,17 @@ namespace UltimateNode.Editor
                 m_GraphView.Init(data);
             }));
             
-            this.Add(AddBtn("Clear All", () =>
+            this.Add(AddBtn("Save", () =>
             {
-                m_GraphView.RemoveAllDataAndView();
+                TestMono mono = objectField.value as TestMono;
+                if (mono != null)
+                {
+                    mono.SaveToStr(m_GraphView.GraphData);
+                }
             }));
+
+            this.Add(AddBtn("Clear All", () => { m_GraphView.RemoveAllDataAndView(); }));
+
         }
 
         Button AddBtn(string btnName, Action onclick)

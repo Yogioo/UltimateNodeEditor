@@ -68,6 +68,9 @@ namespace UltimateNode
                 var customAttributes = parameterInfo.GetCustomAttributes(typeof(MultiPortAttribute));
                 int capacity = customAttributes.Any() ? 1 : 0;
 
+                var hideAttributes = parameterInfo.GetCustomAttributes(typeof(HidePortAttribute));
+                bool isHidePort = hideAttributes.Any();
+
                 PortType portType = PortType.Input;
 
                 var realParameterType = parameterInfo.ParameterType;
@@ -84,6 +87,7 @@ namespace UltimateNode
                     PortName = parameterInfo.Name,
                     PortType = portType,
                     PortValueType = realParameterType,
+                    IsHide = isHidePort,
                     OriginVal = parameterInfo.ParameterType.IsValueType
                         ? Activator.CreateInstance(parameterInfo.ParameterType)
                         : null,
@@ -168,6 +172,11 @@ namespace UltimateNode
         /// if equal 1 Port be able to connect multi edge
         /// </summary>
         public int Capacity;
+
+        /// <summary>
+        /// Hide Port
+        /// </summary>
+        public bool IsHide;
 
         /// <summary>
         /// Port Data

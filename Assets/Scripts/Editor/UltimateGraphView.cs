@@ -12,7 +12,7 @@ namespace UltimateNode.Editor
     {
         private readonly UltimateWindowBase m_CoreWindow;
         private UltimateSearchWindow m_SearchWindow;
-        private UltimateGraphData m_GraphData;
+        public UltimateGraphData GraphData { get; private set; }
 
         private List<UltimateNodeView> m_AllNodes;
         private List<UltimateEdgeView> m_AllEdges;
@@ -41,13 +41,15 @@ namespace UltimateNode.Editor
         public void Init(UltimateGraphData p_GraphData)
         {
             ClearAllNodeAndEdgeView();
-            this.m_GraphData = p_GraphData;
+            this.GraphData = null;
+            
+            this.GraphData = p_GraphData;
             UltimateNodeFactory.LoadGraph(this, p_GraphData);
         }
 
         public void AddNodeData(UltimateNodeData nodeData)
         {
-            m_GraphData.Nodes.Add(nodeData);
+            GraphData.Nodes.Add(nodeData);
         }
 
         /// <summary>
@@ -82,7 +84,7 @@ namespace UltimateNode.Editor
 
         public void AddEdgeData(UltimateEdgeData p_UltimateEdgeData)
         {
-            m_GraphData.Edges.Add(p_UltimateEdgeData);
+            GraphData.Edges.Add(p_UltimateEdgeData);
         }
         /// <summary>
         /// Add Edge to  Graph View 
@@ -111,7 +113,7 @@ namespace UltimateNode.Editor
                 DisconnectAll(ultimateNodeView);
 
                 this.m_AllNodes.Remove(ultimateNodeView);
-                this.m_GraphData.Nodes.Remove(ultimateNodeView.NodeData);
+                this.GraphData.Nodes.Remove(ultimateNodeView.NodeData);
             }
 
             this.DeleteElements(nodeViews);
@@ -145,7 +147,7 @@ namespace UltimateNode.Editor
             foreach (var ultimateEdgeView in edgeViews)
             {
                 this.m_AllEdges.Remove(ultimateEdgeView);
-                this.m_GraphData.Edges.Remove(ultimateEdgeView.EdgeData);
+                this.GraphData.Edges.Remove(ultimateEdgeView.EdgeData);
             }
 
             this.DeleteElements(edgeViews);
@@ -160,6 +162,8 @@ namespace UltimateNode.Editor
         {
             m_AllNodes.ForEach(this.RemoveElement);
             m_AllEdges.ForEach(this.RemoveElement);
+            DeleteElements(m_AllEdges);
+            DeleteElements(m_AllNodes);
         }
 
         #region Callback

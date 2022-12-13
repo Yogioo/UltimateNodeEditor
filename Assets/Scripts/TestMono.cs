@@ -49,9 +49,9 @@ namespace UltimateNode
                     new PortData()
                     {
                         PortName = "F",
-                        PortValueType =  typeof(Color),
-                        PortType =  PortType.Output,
-                        OriginVal =  Color.black
+                        PortValueType = typeof(Color),
+                        PortType = PortType.Output,
+                        OriginVal = Color.black
                     }
                 }
             });
@@ -70,10 +70,12 @@ namespace UltimateNode
         [ContextMenu("SaveCurrentToStr")]
         public void SaveCurrentToStr()
         {
-            var fsSerializer = new fsSerializer();
-            fsSerializer.TrySerialize(this.graphData.GetType(), graphData, out var data)
-                .AssertSuccessWithoutWarnings();
-            JsonData = fsJsonPrinter.CompressedJson(data);
+            SaveToStr(graphData);
+        }
+
+        public void SaveToStr(UltimateGraphData p_Data)
+        {
+            JsonData = JsonHelper.Serialize(p_Data);
             Debug.Log("Serialized Success");
         }
 
@@ -84,7 +86,7 @@ namespace UltimateNode
             UltimateFlowProcess process = new UltimateFlowProcess(this.graphData);
             process.Play();
         }
-        
+
 
         //
         // public Test TestData;

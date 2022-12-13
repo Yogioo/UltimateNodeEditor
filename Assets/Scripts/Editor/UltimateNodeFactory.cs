@@ -75,6 +75,11 @@ namespace UltimateNode.Editor
                     Debug.LogError($"No Such Port Type:{portData.PortType}");
                 }
 
+                if (portData.IsHide)
+                {
+                    newPort.style.display = DisplayStyle.None;
+                }
+
                 var fieldInfo = portData.GetType().GetField(nameof(portData.OriginVal));
                 VisualElement element = null;
 
