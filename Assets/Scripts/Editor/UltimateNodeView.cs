@@ -38,7 +38,7 @@ namespace UltimateNode.Editor
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
-            // not need Disconnect all 
+            // Customize Disconnect all 
             // base.BuildContextualMenu(evt);
             evt.menu.AppendAction("Disconnect All Ports", p_Action => { OnDisconnectAllPorts?.Invoke(this); });
             evt.menu.AppendAction("Disconnect Input Ports", p_Action => { OnDisconnectInputPorts?.Invoke(this); });

@@ -26,7 +26,9 @@ namespace UltimateNode.Editor
             m_GraphView.StretchToParentSize();
             rootVisualElement.Add(m_GraphView);
 
-            m_GraphView.Add(new MiniMapView(m_GraphView));
+            var miniMapView = new MiniMapView(m_GraphView);
+            miniMapView.InitSize();
+            m_GraphView.Add(miniMapView);
             
             // Add a button to the toolbar
             // after the graph view, so it's could covered by the graph view
