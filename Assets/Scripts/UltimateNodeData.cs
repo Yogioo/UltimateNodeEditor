@@ -38,7 +38,9 @@ namespace UltimateNode
                 {
                     var targetClass = Assembly.GetExecutingAssembly().GetType(ClassFullName);
                     _MethodInfo = targetClass.GetMethod(this.MethodFullName,
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
+                        | BindingFlags.Default |  BindingFlags.Instance | BindingFlags.GetField| BindingFlags.GetProperty
+                        | BindingFlags.SetField | BindingFlags.SetProperty);
                 }
 
                 return _MethodInfo;
@@ -112,7 +114,7 @@ namespace UltimateNode
             }
         }
 
-        public void Execute()
+        public void Execute(object owner)
         {
             Debug.Log($"Execute:{Name}");
 
@@ -122,11 +124,16 @@ namespace UltimateNode
                 inputData[i] = this.PortData[i].OriginVal;
             }
 
-            m_MethodInfo.Invoke(null, inputData);
+            m_MethodInfo.Invoke(owner, inputData);
             for (var i = 0; i < this.PortData.Count; i++)
             {
                 this.PortData[i].OriginVal = inputData[i];
             }
+        }
+
+        public override string ToString()
+        {
+            return this.Name;
         }
     }
 

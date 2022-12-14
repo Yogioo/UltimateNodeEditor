@@ -22,24 +22,23 @@ namespace UltimateNode.Editor
 
             var objectField = new ObjectField()
             {
-                objectType = typeof(TestMono)
+                objectType = typeof(UltimateGraphEntity)
             };
             this.Add(objectField);
 
             this.Add(AddBtn("Load", () =>
             {
-                TestMono mono = objectField.value as TestMono;
-                mono.LoadFromStr();
-                var data = mono.graphData;
+                UltimateGraphEntity mono = objectField.value as UltimateGraphEntity;
+                var data = mono.LoadFromJson();
                 m_GraphView.Init(data);
             }));
             
             this.Add(AddBtn("Save", () =>
             {
-                TestMono mono = objectField.value as TestMono;
+                UltimateGraphEntity mono = objectField.value as UltimateGraphEntity;
                 if (mono != null)
                 {
-                    mono.SaveToStr(m_GraphView.GraphData);
+                    mono.SaveToJson(m_GraphView.GraphData);
                 }
             }));
 

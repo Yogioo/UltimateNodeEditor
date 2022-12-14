@@ -2,7 +2,7 @@
 
 namespace UltimateNode
 {
-    [NodeGroup]
+    [StaticNodeGroup]
     public class CustomCalc
     {
         public static void Add(FlowData inputFlow, out FlowData outputFlow, float a, float b, out float result,
@@ -12,6 +12,7 @@ namespace UltimateNode
             outputFlow = inputFlow;
             result = a + b;
         }
+
 
         public static void Multiply(float a, float b, out float c)
         {
@@ -23,51 +24,21 @@ namespace UltimateNode
         }
     }
 
-    [NodeGroup]
+    [StaticNodeGroup]
     public static class CustomDebug
     {
-        public static void Log(FlowData inputFlow, float logInfo)
+        public static void Log(FlowData inputFlow, object objectMsg)
         {
-            Debug.Log(logInfo);
+            Debug.Log(objectMsg);
+        }
+        public static void LogWarning(FlowData inputFlow, object objectMsg)
+        {
+            Debug.LogWarning(objectMsg);
+        }
+        public static void LogError(FlowData inputFlow, object objectMsg)
+        {
+            Debug.LogError(objectMsg);
         }
     }
 
-    [NodeGroup]
-    public static class AI
-    {
-        public static void OnAIThink([MultiPort] ref AIFlowData o)
-        {
-            o = new AIFlowData();
-        }
-
-        public static void Select(AIFlowData i, [MultiPort] ref AIFlowData o)
-        {
-            o = i;
-        }
-
-        public static void Sequence(AIFlowData i, [MultiPort] ref AIFlowData o)
-        {
-            o = i;
-        }
-
-        public static void ConditionHPRange(AIFlowData i, float min, float max, [HidePort] ref AIFlowData o)
-        {
-            Debug.Log(min);
-            float playerHP = 0.5f;
-            var condition = min < playerHP && playerHP < max;
-            o.ReturnValue = condition;
-        }
-
-        public static void ActionEat(AIFlowData i, [HidePort] ref AIFlowData o)
-        {
-            o.ReturnValue = true;
-            Debug.Log("Player Eating");
-        }
-
-        public static void ActionWalk(AIFlowData i, [HidePort] ref AIFlowData o)
-        {
-            o.ReturnValue = false;
-            Debug.Log("Player Walking False");
-        }
-    }
 }

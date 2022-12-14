@@ -36,13 +36,14 @@ namespace UltimateNode.Editor
             deleteSelection += OnDeleteCallback;
 
             Init(new UltimateGraphData());
+            
         }
 
         public void Init(UltimateGraphData p_GraphData)
         {
             ClearAllNodeAndEdgeView();
             this.GraphData = null;
-            
+
             this.GraphData = p_GraphData;
             UltimateNodeFactory.LoadGraph(this, p_GraphData);
         }
@@ -78,7 +79,7 @@ namespace UltimateNode.Editor
             ultimateNodeView.OnDisconnectAllPorts += this.DisconnectAll;
             ultimateNodeView.OnDisconnectInputPorts += this.DisconnectAllInputPorts;
             ultimateNodeView.OnDisconnectOutputPorts += this.DisconnectAllOutputPorts;
-            
+
             return ultimateNodeView;
         }
 
@@ -86,6 +87,7 @@ namespace UltimateNode.Editor
         {
             GraphData.Edges.Add(p_UltimateEdgeData);
         }
+
         /// <summary>
         /// Add Edge to  Graph View 
         /// </summary>
@@ -134,6 +136,7 @@ namespace UltimateNode.Editor
                 x.EdgeData.InputNodeGUID == nodeDataGuid).ToList();
             RemoveEdgeDataAndViews(connectionEdge);
         }
+
         public void DisconnectAllOutputPorts(UltimateNodeView p_NodeView)
         {
             var nodeDataGuid = p_NodeView.NodeData.GUID;
@@ -158,6 +161,7 @@ namespace UltimateNode.Editor
             RemoveEdgeDataAndViews(new List<UltimateEdgeView>(this.m_AllEdges));
             RemoveNodeDataAndViews(new List<UltimateNodeView>(this.m_AllNodes));
         }
+
         public void ClearAllNodeAndEdgeView()
         {
             m_AllNodes.ForEach(this.RemoveElement);
@@ -325,7 +329,12 @@ namespace UltimateNode.Editor
             return this.ports.ToList().Where(pot =>
                 pot.direction != startPort.direction &&
                 pot.node != startPort.node &&
-                pot.portType == startPort.portType).ToList();
+                (
+                    pot.portType == startPort.portType || 
+                 (startPort.direction == Direction.Input &&pot.portType.IsSubclassOf(startPort.portType))||
+                 (pot.direction == Direction.Input &&  startPort.portType.IsSubclassOf(pot.portType)) 
+                 )
+            ).ToList();
         }
 
         #endregion

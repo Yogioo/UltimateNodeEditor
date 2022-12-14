@@ -30,7 +30,8 @@ namespace UltimateNode.Editor
             List<SearchTreeEntry> searchTreeEntries = new List<SearchTreeEntry>();
             searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Ultimate Node"), 0));
             searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent("Tool Node"), 1));
-            searchTreeEntries.Add(new SearchTreeEntry(new GUIContent("Group")){level = 2,userData =  ToolNodeType.Group});
+            searchTreeEntries.Add(new SearchTreeEntry(new GUIContent("Group"))
+                { level = 2, userData = ToolNodeType.Group });
             AddNodeGroupByAttributeType(GetTypesByAttribute(), searchTreeEntries, 1);
             return searchTreeEntries;
         }
@@ -42,7 +43,7 @@ namespace UltimateNode.Editor
             var types = executingAssembly.GetTypes();
             foreach (var type in types)
             {
-                var customAttributes = type.GetCustomAttributes(typeof(NodeGroupAttribute), true);
+                var customAttributes = type.GetCustomAttributes(typeof(StaticNodeGroupAttribute), true);
                 if (customAttributes.Length > 0)
                 {
                     result.Add(type);
@@ -59,7 +60,10 @@ namespace UltimateNode.Editor
             {
                 searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent(targetClass.Name), levelCount));
 
-                var methodInfos = targetClass.GetMethods(BindingFlags.Static | BindingFlags.Public);
+                var methodInfos =
+                    targetClass.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
+                    | BindingFlags.Default |  BindingFlags.Instance | BindingFlags.GetField| BindingFlags.GetProperty
+                    | BindingFlags.SetField | BindingFlags.SetProperty);
                 foreach (var methodInfo in methodInfos)
                 {
                     StringBuilder methodDisplay = new StringBuilder($"{methodInfo.Name}");
@@ -103,7 +107,7 @@ namespace UltimateNode.Editor
                     m_GraphView.AddNodeView(nodeData, localMousePosition);
                     return true;
                 case ToolNodeType toolNodeType:
-                   
+
                     return true;
                 default:
                     break;
@@ -111,7 +115,7 @@ namespace UltimateNode.Editor
 
             return false;
         }
-        
+
         private enum ToolNodeType
         {
             Group,

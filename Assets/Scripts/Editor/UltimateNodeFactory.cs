@@ -85,7 +85,7 @@ namespace UltimateNode.Editor
 
                 if (portData.OriginVal == null)
                 {
-                    Debug.Log("Null Port Origin Val");
+                    // Debug.Log("Null Port Origin Val");
                 }
                 else if (portData.PortType == PortType.Output)
                 {

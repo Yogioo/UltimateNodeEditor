@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -13,24 +14,24 @@ namespace UltimateNode
             m_Data = p_GraphData;
         }
 
-        public void Play()
+        public void Play(object owner)
         {
             UltimateNodeData startNode = m_Data.Nodes.FirstOrDefault(
                 x => x.Name == nameof(FlowControl.OnStart));
             if (startNode != null)
             {
-                InvokeOnStartByProcess(startNode);
+                InvokeOnStartByProcess(owner, startNode);
             }
 
 
             var aiThinkNode = m_Data.Nodes.FirstOrDefault(x => x.Name == nameof(AI.OnAIThink));
             if (aiThinkNode != null)
             {
-                InvokeOnAIThinkByProcess(aiThinkNode, new AIFlowData());
+                InvokeOnAIThinkByProcess(owner, aiThinkNode, new AIFlowData());
             }
         }
 
-        private void InvokeOnStartByProcess(UltimateNodeData targetNode)
+        private void InvokeOnStartByProcess(object p_Owner, UltimateNodeData targetNode)
         {
             List<UltimateNodeData> needExeNode = new List<UltimateNodeData>();
             needExeNode.Add(targetNode);
@@ -48,21 +49,105 @@ namespace UltimateNode
 
                 List<UltimateNodeData> cache = new List<UltimateNodeData>();
 
-                foreach (var outputNodeData in needExeNode)
+                foreach (UltimateNodeData outputNodeData in needExeNode)
                 {
-                    var inputPortData = outputNodeData.PortData.FirstOrDefault(x =>
-                        x.PortValueType == typeof(FlowData) && x.PortType == PortType.Input);
+                    PortData inputPortData = null;
 
+                    inputPortData = outputNodeData.PortData.FirstOrDefault(x =>
+                        IsTypeOrSubclass(x.PortValueType, typeof(FlowData)) && x.PortType == PortType.Input);
+
+                    // Execute All Connection PreNode
+                    void ExecutePreNode(UltimateNodeData t_CurrentNode, int limit = 1000)
+                    {
+                        limit--;
+                        if (limit < 0)
+                        {
+                            Debug.LogError("Loop ExecutePreNode");
+                            return;
+                        }
+
+                        var preNodeGUIDs = m_Data.Edges.Where(x =>
+                                {
+                                    if (x.InputNodeGUID == t_CurrentNode.GUID)
+                                    {
+                                        var connectInputPort =
+                                            t_CurrentNode.PortData.FirstOrDefault(port =>
+                                                port.PortName == x.InputPortName);
+                                        if (IsTypeOrSubclass(connectInputPort.PortValueType, typeof(FlowData)))
+                                        {
+                                            return false;
+                                        }
+                                        else
+                                        {
+                                            return true;
+                                        }
+                                    }
+                                    return false;
+                                }
+                                // && !IsTypeOrSubclass(t_CurrentNode.PortData.FirstOrDefault(port=>port.PortName==x.InputPortName).PortValueType,typeof(FlowData)) 
+                            )
+                            .Select(x => x.OutputNodeGUID).ToList();
+
+                        foreach (var ultimateNodeData in m_Data.Nodes)
+                        {
+                            if (preNodeGUIDs.Contains(ultimateNodeData.GUID))
+                            {
+                                // preNode
+                                var preNode = ultimateNodeData;
+                                ExecutePreNode(preNode);
+                                preNode.Execute(p_Owner);
+                                foreach (var edgeData in m_Data.Edges)
+                                {
+                                    // Match this node(OutputNode) connected inputNode
+                                    if (edgeData.OutputNodeGUID == preNode.GUID)
+                                    {
+                                        var inputNode = m_Data.Nodes.First(x => x.GUID == edgeData.InputNodeGUID);
+
+                                        PortData outputPort = null, inputPort = null;
+                                        for (var i = 0; i < preNode.PortData.Count; i++)
+                                        {
+                                            var portData = preNode.PortData[i];
+                                            if (edgeData.OutputPortName == portData.PortName)
+                                            {
+                                                outputPort = portData;
+                                                break;
+                                            }
+                                        }
+
+                                        for (var i = 0; i < inputNode.PortData.Count; i++)
+                                        {
+                                            var portData = inputNode.PortData[i];
+                                            if (edgeData.InputPortName == portData.PortName)
+                                            {
+                                                inputPort = portData;
+                                                break;
+                                            }
+                                        }
+
+                                        if (inputPort != null && outputPort != null)
+                                        {
+                                            inputPort.OriginVal = outputPort.OriginVal;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                    //Execute FlowData Connection  PreNode 
                     if (inputPortData != null)
                     {
                         if (inputPortData.OriginVal is FlowData originVal)
                         {
-                            outputNodeData.Execute();
+                            ExecutePreNode(outputNodeData);
+                            outputNodeData.Execute(p_Owner);
                         }
                     }
                     else
                     {
-                        outputNodeData.Execute();
+                        ExecutePreNode(outputNodeData);
+                        outputNodeData.Execute(p_Owner);
                     }
 
                     foreach (var edgeData in m_Data.Edges)
@@ -111,14 +196,14 @@ namespace UltimateNode
             }
         }
 
-        private bool InvokeOnAIThinkByProcess(UltimateNodeData currentNode,AIFlowData p_FlowData)
+        private bool InvokeOnAIThinkByProcess(object p_Owner, UltimateNodeData currentNode, AIFlowData p_FlowData)
         {
             var outputNodeData = currentNode;
             //1. Check Child Node Return Value, If it's True, return
 
             // 1. Get Output Port
             var outputPort = outputNodeData.PortData.FirstOrDefault(x =>
-                x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+                IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
             Debug.Log(outputPort.PortName);
 
             // 2. Get Connection Input Nodes
@@ -141,14 +226,14 @@ namespace UltimateNode
                 // Modify Node Not Execute
                 if (node.Name == nameof(AI.Sequence) || node.Name == nameof(AI.Select))
                 {
-                    return InvokeOnAIThinkByProcess(node, p_FlowData);
+                    return InvokeOnAIThinkByProcess(p_Owner, node, p_FlowData);
                 }
                 else
                 {
                     var actionOrConditionOutputPort = node.PortData.FirstOrDefault(x =>
-                        x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+                        IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
                     actionOrConditionOutputPort.OriginVal = p_FlowData;
-                    node.Execute();
+                    node.Execute(p_Owner);
 
                     if (currentNode.Name == nameof(AI.Sequence))
                     {
@@ -184,15 +269,27 @@ namespace UltimateNode
             }
 
             var currentOutputPort = outputNodeData.PortData.FirstOrDefault(x =>
-                x.PortValueType == typeof(AIFlowData) && x.PortType == PortType.Output);
+                IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
             currentOutputPort.OriginVal = p_FlowData;
-            outputNodeData.Execute();
+            outputNodeData.Execute(p_Owner);
             return p_FlowData.ReturnValue;
         }
 
         private static List<UltimateNodeData> OrderNodes(List<UltimateNodeData> connectionNodes)
         {
             return connectionNodes.OrderBy(x => x.Position.position.y).ToList();
+        }
+
+        private static bool IsTypeOrSubclass(Type a, Type b)
+        {
+            if (a == b || a.IsSubclassOf(b))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
