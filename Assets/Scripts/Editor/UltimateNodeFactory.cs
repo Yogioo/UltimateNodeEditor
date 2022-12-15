@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace UltimateNode.Editor
         public static void LoadGraph(UltimateGraphView p_UltimateGraphView, UltimateGraphData p_GraphData)
         {
             var nodes = new List<UltimateNodeView>();
-           
+
             foreach (var nodeData in p_GraphData.Nodes)
             {
                 var ultimateNodeView = p_UltimateGraphView.AddNodeView(nodeData);
@@ -85,7 +86,17 @@ namespace UltimateNode.Editor
 
                 if (portData.OriginVal == null)
                 {
+                    portData.OriginVal = portData.PortValueType.GetDefaultValue();
+                }
+
+
+                if (portData.OriginVal == null)
+                {
                     // Debug.Log("Null Port Origin Val");
+                }
+                else if (UltimateSetting.IgnoreDisplayTypeArr.Contains(portData.PortValueType))
+                {
+                    // Ignore Diplsay 
                 }
                 else if (portData.PortType == PortType.Output)
                 {
@@ -138,18 +149,28 @@ namespace UltimateNode.Editor
                     t.RegisterValueChangedCallback(x => { fieldInfo.SetValue(portData, x.newValue); });
                     element = t;
                 }
-                else if (portValType == typeof(FlowData))
+                else if (portValType == typeof(AnimationCurve))
                 {
+                    var t = new CurveField() { value = (AnimationCurve)portData.OriginVal };
+                    t.RegisterValueChangedCallback(x => { fieldInfo.SetValue(portData, x.newValue); });
+                    element = t;
+                }
+                else if (portValType == typeof(string))
+                {
+                    var t = new TextField() { value = (string)portData.OriginVal };
+                    t.RegisterValueChangedCallback(x => { fieldInfo.SetValue(portData, x.newValue); });
+                    element = t;
                 }
                 else
                 {
-                    Debug.LogError($"Parse Error Type:{portData.OriginVal.GetType()}");
+                    Debug.Log($"Cannot Parse Type To Ultimate Graph Display:{portData.OriginVal.GetType()}");
                 }
 
                 newPort.InputElement = element;
                 if (element != null)
                 {
-                    element.style.maxWidth = 100;
+                    element.style.minWidth = 50;
+                    element.style.flexDirection = FlexDirection.Column;
                     newPort.Add(element);
                 }
             }
@@ -158,6 +179,36 @@ namespace UltimateNode.Editor
 
 
             return loadedNode;
+        }
+
+        private static HybridDictionary defaultValueMap = new HybridDictionary();
+
+        public static object GetDefaultValue(this Type type)
+        {
+            if (!type.IsValueType)
+            {
+                if (type.IsSubclassOf(typeof(MonoBehaviour)))
+                {
+                    return null;
+                }
+                else if (type == typeof(String))
+                {
+                    return "";
+                }
+                else
+                {
+                    return Activator.CreateInstance(type);
+                }
+            }
+
+            if (defaultValueMap.Contains(type))
+            {
+                return defaultValueMap[type];
+            }
+
+            object defaultValue = Activator.CreateInstance(type);
+            defaultValueMap[type] = defaultValue;
+            return defaultValue;
         }
 
         /// <summary>

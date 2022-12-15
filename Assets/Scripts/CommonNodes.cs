@@ -1,6 +1,6 @@
 ﻿namespace UltimateNode
 {
-    [StaticNodeGroup]
+    [NodeGroup]
     public static class FlowControl
     {
         public static void OnStart(out FlowData Start)
@@ -28,10 +28,9 @@
             AIUpdate = new FlowData();
         }
     }
-    [StaticNodeGroup]
+    [NodeGroup]
     public static class AI
     {
-        
         #region AI Nodes
 
         public static void OnAIThink([MultiPort] ref AIFlowData o)

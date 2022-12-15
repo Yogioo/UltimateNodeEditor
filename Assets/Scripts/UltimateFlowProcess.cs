@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UltimateNode
@@ -14,24 +15,32 @@ namespace UltimateNode
             m_Data = p_GraphData;
         }
 
-        public void Play(object owner)
+        public async void PlayFlow(object owner, string startNodeName)
         {
-            UltimateNodeData startNode = m_Data.Nodes.FirstOrDefault(
-                x => x.Name == nameof(FlowControl.OnStart));
+            UltimateNodeData startNode = m_Data.Nodes.FirstOrDefault(x => x.Name == startNodeName);
             if (startNode != null)
             {
-                InvokeOnStartByProcess(owner, startNode);
-            }
-
-
-            var aiThinkNode = m_Data.Nodes.FirstOrDefault(x => x.Name == nameof(AI.OnAIThink));
-            if (aiThinkNode != null)
-            {
-                InvokeOnAIThinkByProcess(owner, aiThinkNode, new AIFlowData());
+                await InvokeOnStartByProcess(owner, startNode);
             }
         }
 
-        private void InvokeOnStartByProcess(object p_Owner, UltimateNodeData targetNode)
+        public async void PlayAIFlow(object owner)
+        {
+            var aiThinkNode = m_Data.Nodes.FirstOrDefault(x => x.Name == nameof(AI.OnAIThink));
+            if (aiThinkNode != null)
+            {
+                await InvokeOnAIThinkByProcess(owner, aiThinkNode, new AIFlowData());
+            }
+        }
+
+        public void Play(object owner)
+        {
+            PlayFlow(owner, nameof(FlowControl.OnStart));
+            
+            PlayAIFlow(owner);
+        }
+
+        private async Task InvokeOnStartByProcess(object p_Owner, UltimateNodeData targetNode)
         {
             List<UltimateNodeData> needExeNode = new List<UltimateNodeData>();
             needExeNode.Add(targetNode);
@@ -57,7 +66,7 @@ namespace UltimateNode
                         IsTypeOrSubclass(x.PortValueType, typeof(FlowData)) && x.PortType == PortType.Input);
 
                     // Execute All Connection PreNode
-                    void ExecutePreNode(UltimateNodeData t_CurrentNode, int limit = 1000)
+                    async Task ExecutePreNode(UltimateNodeData t_CurrentNode, int limit = 1000)
                     {
                         limit--;
                         if (limit < 0)
@@ -82,6 +91,7 @@ namespace UltimateNode
                                             return true;
                                         }
                                     }
+
                                     return false;
                                 }
                                 // && !IsTypeOrSubclass(t_CurrentNode.PortData.FirstOrDefault(port=>port.PortName==x.InputPortName).PortValueType,typeof(FlowData)) 
@@ -94,8 +104,8 @@ namespace UltimateNode
                             {
                                 // preNode
                                 var preNode = ultimateNodeData;
-                                ExecutePreNode(preNode);
-                                preNode.Execute(p_Owner);
+                                await ExecutePreNode(preNode);
+                                await preNode.Execute(p_Owner);
                                 foreach (var edgeData in m_Data.Edges)
                                 {
                                     // Match this node(OutputNode) connected inputNode
@@ -140,14 +150,14 @@ namespace UltimateNode
                     {
                         if (inputPortData.OriginVal is FlowData originVal)
                         {
-                            ExecutePreNode(outputNodeData);
-                            outputNodeData.Execute(p_Owner);
+                            await ExecutePreNode(outputNodeData);
+                            await outputNodeData.Execute(p_Owner);
                         }
                     }
                     else
                     {
-                        ExecutePreNode(outputNodeData);
-                        outputNodeData.Execute(p_Owner);
+                        await ExecutePreNode(outputNodeData);
+                        await outputNodeData.Execute(p_Owner);
                     }
 
                     foreach (var edgeData in m_Data.Edges)
@@ -196,7 +206,8 @@ namespace UltimateNode
             }
         }
 
-        private bool InvokeOnAIThinkByProcess(object p_Owner, UltimateNodeData currentNode, AIFlowData p_FlowData)
+        private async Task<bool> InvokeOnAIThinkByProcess(object p_Owner, UltimateNodeData currentNode,
+            AIFlowData p_FlowData)
         {
             var outputNodeData = currentNode;
             //1. Check Child Node Return Value, If it's True, return
@@ -226,14 +237,15 @@ namespace UltimateNode
                 // Modify Node Not Execute
                 if (node.Name == nameof(AI.Sequence) || node.Name == nameof(AI.Select))
                 {
-                    return InvokeOnAIThinkByProcess(p_Owner, node, p_FlowData);
+                    var returnVal = await InvokeOnAIThinkByProcess(p_Owner, node, p_FlowData);
+                    return returnVal;
                 }
                 else
                 {
                     var actionOrConditionOutputPort = node.PortData.FirstOrDefault(x =>
                         IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
                     actionOrConditionOutputPort.OriginVal = p_FlowData;
-                    node.Execute(p_Owner);
+                    await node.Execute(p_Owner);
 
                     if (currentNode.Name == nameof(AI.Sequence))
                     {
@@ -271,7 +283,7 @@ namespace UltimateNode
             var currentOutputPort = outputNodeData.PortData.FirstOrDefault(x =>
                 IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
             currentOutputPort.OriginVal = p_FlowData;
-            outputNodeData.Execute(p_Owner);
+            await outputNodeData.Execute(p_Owner);
             return p_FlowData.ReturnValue;
         }
 

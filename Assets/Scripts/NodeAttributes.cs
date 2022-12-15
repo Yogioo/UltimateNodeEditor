@@ -24,11 +24,20 @@ namespace UltimateNode
     /// When tag this attribute, this class will be Custom Node Group
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class StaticNodeGroupAttribute : Attribute
+    public class NodeGroupAttribute : Attribute
     {
-       
+        public string DisplayName;
+
+        public NodeGroupAttribute()
+        {
+        }
+
+        public NodeGroupAttribute(string p_DisplayName)
+        {
+            this.DisplayName = p_DisplayName;
+        }
     }
-    
+
     #endregion
 
     #region PortAttribute

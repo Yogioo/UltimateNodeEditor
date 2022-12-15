@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using FullSerializer.Internal;
 using UnityEngine;
 using UnityEngine.Windows.WebCam;
 
@@ -36,11 +38,9 @@ namespace UltimateNode
             {
                 if (_MethodInfo == null)
                 {
-                    var targetClass = Assembly.GetExecutingAssembly().GetType(ClassFullName);
-                    _MethodInfo = targetClass.GetMethod(this.MethodFullName,
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
-                        | BindingFlags.Default |  BindingFlags.Instance | BindingFlags.GetField| BindingFlags.GetProperty
-                        | BindingFlags.SetField | BindingFlags.SetProperty);
+                    
+                    var targetClass = UltimateSetting.ParseAssembly.GetType(ClassFullName);
+                    _MethodInfo = targetClass.GetMethod(this.MethodFullName, UltimateSetting.ParseNodeBindingFlags);
                 }
 
                 return _MethodInfo;
@@ -114,7 +114,7 @@ namespace UltimateNode
             }
         }
 
-        public void Execute(object owner)
+        public async Task Execute(object owner)
         {
             Debug.Log($"Execute:{Name}");
 
@@ -124,12 +124,71 @@ namespace UltimateNode
                 inputData[i] = this.PortData[i].OriginVal;
             }
 
-            m_MethodInfo.Invoke(owner, inputData);
+            // ---------------------Execute Async Function--------------------- 
+            var _methodInfo = m_MethodInfo;
+            // Await Reflection Async Function
+            var isAwaitable = _methodInfo.ReturnType.GetMethod(nameof(Task.GetAwaiter)) != null;
+            if (isAwaitable)
+            {
+                await (Task)_methodInfo.Invoke(owner, inputData);
+            }
+            else
+            {
+                _methodInfo.Invoke(owner, inputData);
+            }
+            // ---------------------Execute Complete---------------------
+
             for (var i = 0; i < this.PortData.Count; i++)
             {
                 this.PortData[i].OriginVal = inputData[i];
             }
         }
+
+        private async void ExecuteAsyncFunctionWithoutNoReturn(object owner, object[] inputData)
+        {
+            var _methodInfo = m_MethodInfo;
+            // Await Reflection Async Function
+            var isAwaitable = _methodInfo.ReturnType.GetMethod(nameof(Task.GetAwaiter)) != null;
+            if (isAwaitable)
+            {
+                await (Task)_methodInfo.Invoke(owner, inputData);
+            }
+            else
+            {
+                _methodInfo.Invoke(owner, inputData);
+            }
+        }
+        // private async Task<object> ExecuteAsyncFunction(object owner, object[] inputData)
+        // {
+        //     var _methodInfo = m_MethodInfo;
+        //     // Await Reflection Async Function
+        //     var isAwaitable = _methodInfo.ReturnType.GetMethod(nameof(Task.GetAwaiter)) != null;
+        //     if (isAwaitable)
+        //     {
+        //         if (_methodInfo.ReturnType.IsGenericType)
+        //         {
+        //             return (object)await (dynamic)_methodInfo.Invoke(owner, inputData);
+        //         }
+        //         else
+        //         {
+        //             await (Task)_methodInfo.Invoke(owner, inputData);
+        //         }
+        //     }
+        //     else
+        //     {
+        //         if (_methodInfo.ReturnType == typeof(void))
+        //         {
+        //             _methodInfo.Invoke(owner, inputData);
+        //         }
+        //         else
+        //         {
+        //             return _methodInfo.Invoke(owner, inputData);
+        //         }
+        //     }
+        //
+        //     return null;
+        // }
+
 
         public override string ToString()
         {

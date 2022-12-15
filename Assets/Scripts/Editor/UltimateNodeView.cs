@@ -11,17 +11,18 @@ namespace UltimateNode.Editor
         public event Action<UltimatePortView, Edge> OnPortConnectionChange;
         public event Action<UltimateNodeView> OnDisconnectAllPorts,OnDisconnectInputPorts,OnDisconnectOutputPorts;
 
+        
         public UltimateNodeView(UltimateNodeData nodeData) : base()
         {
             this.NodeData = nodeData;
 
-            Button btn = new Button(() =>
-            {
-                AddOutput("Test", Orientation.Horizontal, Port.Capacity.Single, typeof(Rect));
-                this.RefreshExpandedState();
-                this.RefreshPorts();
-            }) { text = "+" };
-            this.titleContainer.Add(btn);
+            // Button btn = new Button(() =>
+            // {
+            //     AddOutput("Test", Orientation.Horizontal, Port.Capacity.Single, typeof(Rect));
+            //     this.RefreshExpandedState();
+            //     this.RefreshPorts();
+            // }) { text = "+" };
+            // this.titleContainer.Add(btn);
         }
 
 

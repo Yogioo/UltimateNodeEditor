@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using FullSerializer;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using YogiTools;
 
 namespace UltimateNode.Editor
 {
@@ -35,15 +37,15 @@ namespace UltimateNode.Editor
             unserializeAndPaste += OnPaste;
             deleteSelection += OnDeleteCallback;
 
-            Init(new UltimateGraphData());
-            
+            EventManager.Instance.AddEventListener(UltimateGraphEventConst.OnDropOutsidePort,
+                ((UltimateEdgeView edge, UnityEngine.Vector2 position ) args) =>
+                {
+                    OnDropOutsidePort(args.edge, args.position);
+                });
         }
 
         public void Init(UltimateGraphData p_GraphData)
         {
-            ClearAllNodeAndEdgeView();
-            this.GraphData = null;
-
             this.GraphData = p_GraphData;
             UltimateNodeFactory.LoadGraph(this, p_GraphData);
         }
@@ -79,7 +81,6 @@ namespace UltimateNode.Editor
             ultimateNodeView.OnDisconnectAllPorts += this.DisconnectAll;
             ultimateNodeView.OnDisconnectInputPorts += this.DisconnectAllInputPorts;
             ultimateNodeView.OnDisconnectOutputPorts += this.DisconnectAllOutputPorts;
-
             return ultimateNodeView;
         }
 
@@ -168,6 +169,14 @@ namespace UltimateNode.Editor
             m_AllEdges.ForEach(this.RemoveElement);
             DeleteElements(m_AllEdges);
             DeleteElements(m_AllNodes);
+            m_AllNodes.Clear();
+            m_AllEdges.Clear();
+        }
+
+        public void OnDropOutsidePort(UltimateEdgeView edge, UnityEngine.Vector2 position)
+        {
+            // This is wrong position, but I don't now how to calc this.... help~
+            OnOpenSearchWindow(GetLocalMousePosition(position));
         }
 
         #region Callback
@@ -246,6 +255,7 @@ namespace UltimateNode.Editor
             for (var i = 0; i < nodesJsonData.Length; i++)
             {
                 UltimateNodeData newNodeData = JsonHelper.Deserialize<UltimateNodeData>(nodesJsonData[i]);
+                newNodeData.GUID = Guid.NewGuid().ToString();
                 this.AddNodeData(newNodeData);
                 var newPos = newNodeData.Position;
                 newPos.position += Vector2.one * 50;
@@ -268,7 +278,12 @@ namespace UltimateNode.Editor
             m_SearchWindow.Init(this);
 
             nodeCreationRequest = content =>
-                SearchWindow.Open(new SearchWindowContext(content.screenMousePosition), m_SearchWindow);
+                OnOpenSearchWindow(content.screenMousePosition);
+        }
+
+        private void OnOpenSearchWindow(Vector2 screenMousePosition)
+        {
+            SearchWindow.Open(new SearchWindowContext(screenMousePosition), m_SearchWindow);
         }
 
         private void AddBackground()
@@ -330,10 +345,10 @@ namespace UltimateNode.Editor
                 pot.direction != startPort.direction &&
                 pot.node != startPort.node &&
                 (
-                    pot.portType == startPort.portType || 
-                 (startPort.direction == Direction.Input &&pot.portType.IsSubclassOf(startPort.portType))||
-                 (pot.direction == Direction.Input &&  startPort.portType.IsSubclassOf(pot.portType)) 
-                 )
+                    pot.portType == startPort.portType ||
+                    (startPort.direction == Direction.Input && pot.portType.IsSubclassOf(startPort.portType)) ||
+                    (pot.direction == Direction.Input && startPort.portType.IsSubclassOf(pot.portType))
+                )
             ).ToList();
         }
 

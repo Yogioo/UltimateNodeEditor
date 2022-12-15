@@ -36,34 +36,74 @@ namespace UltimateNode.Editor
             return searchTreeEntries;
         }
 
-        private List<Type> GetTypesByAttribute()
+        private List<(Type classType, string displayName)> GetTypesByAttribute()
         {
-            List<Type> result = new List<Type>();
-            var executingAssembly = Assembly.GetAssembly(typeof(UltimateNodeData));
+            List<(Type, string displayName)> results = new List<(Type, string displayName)>();
+            var executingAssembly = UltimateSetting.ParseAssembly;
             var types = executingAssembly.GetTypes();
             foreach (var type in types)
             {
-                var customAttributes = type.GetCustomAttributes(typeof(StaticNodeGroupAttribute), true);
+                var customAttributes = type.GetCustomAttributes(typeof(NodeGroupAttribute), true);
                 if (customAttributes.Length > 0)
                 {
-                    result.Add(type);
+                    var nodeGroupAttribute = customAttributes[0] as NodeGroupAttribute;
+                    (Type, string) singleLine = (type, nodeGroupAttribute.DisplayName);
+                    results.Add(singleLine);
+                }
+            } 
+
+            if (results.Count > 1)
+            {
+                List<Type> needRemove = new List<Type>();
+                for (var i = 0; i < results.Count-1; i++)
+                {
+                    (Type type0, string displayName0) = results[i];
+                    for (int j = 1; j < results.Count; j++)
+                    {
+                        var (type1, displayName1) = results[j];
+
+                        if (type0.IsSubclassOf(type1))
+                        {
+                            needRemove.Add(type1);
+                        }else if (type1.IsSubclassOf(type0))
+                        {
+                            needRemove.Add(type0);
+                        }
+                        else
+                        {
+                        }
+                    }
+                }
+                foreach (var type in needRemove)
+                {
+                    for (var i = 0; i < results.Count; i++)
+                    {
+                        if (results[i].Item1 == type)
+                        {
+                            results.RemoveAt(i);
+                            i--;
+                        }
+                    }
                 }
             }
+            
+            
 
-            return result;
+            return results;
         }
 
-        private void AddNodeGroupByAttributeType(List<Type> p_Types, List<SearchTreeEntry> searchTreeEntries,
+        private void AddNodeGroupByAttributeType(List<(Type classType, string displayName)> p_Types,
+            List<SearchTreeEntry> searchTreeEntries,
             int levelCount)
         {
             foreach (var targetClass in p_Types)
             {
-                searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent(targetClass.Name), levelCount));
+                string displayName;
+                displayName = targetClass.displayName ?? targetClass.classType.Name;
+                searchTreeEntries.Add(new SearchTreeGroupEntry(new GUIContent(displayName), levelCount));
 
                 var methodInfos =
-                    targetClass.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
-                    | BindingFlags.Default |  BindingFlags.Instance | BindingFlags.GetField| BindingFlags.GetProperty
-                    | BindingFlags.SetField | BindingFlags.SetProperty);
+                    targetClass.classType.GetMethods(UltimateSetting.ParseNodeBindingFlags);
                 foreach (var methodInfo in methodInfos)
                 {
                     StringBuilder methodDisplay = new StringBuilder($"{methodInfo.Name}");

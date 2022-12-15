@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
+using YogiTools;
 using Vector2 = System.Numerics.Vector2;
 
 namespace UltimateNode.Editor
@@ -31,7 +33,6 @@ namespace UltimateNode.Editor
         {
             base.Connect(edge);
             this.OnConnected?.Invoke(this, edge);
-            Debug.Log("OnConnected");
             SetDisplayInputElement(false);
         }
 
@@ -39,15 +40,13 @@ namespace UltimateNode.Editor
         {
             base.Disconnect(edge);
             this.OnDisconnected?.Invoke(this, edge);
-            Debug.Log("OnDisconnected");
             SetDisplayInputElement(true);
         }
 
-        public new static UltimatePortView Create<TEdge>(
-            Orientation orientation,
+        public new static UltimatePortView Create<TEdge>(Orientation orientation,
             Direction direction,
-            Port.Capacity capacity,
-            System.Type type)
+            Capacity capacity,
+            Type type)
             where TEdge : Edge, new()
         {
             CustomEdgeConnectorListener listener = new CustomEdgeConnectorListener();
@@ -79,6 +78,7 @@ namespace UltimateNode.Editor
 
             public void OnDropOutsidePort(Edge edge, UnityEngine.Vector2 position)
             {
+                EventManager.Instance.EventTrigger(UltimateGraphEventConst.OnDropOutsidePort,(edge as UltimateEdgeView,position));
             }
 
             public void OnDrop(UnityEditor.Experimental.GraphView.GraphView graphView, Edge edge)
