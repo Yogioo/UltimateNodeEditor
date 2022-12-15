@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using YogiTools;
 
 namespace UltimateNode
 {
     public class UltimateFlowProcess
     {
+        public bool IsDebug = true;
         private UltimateGraphData m_Data;
 
         public UltimateFlowProcess(UltimateGraphData p_GraphData)
@@ -36,7 +38,7 @@ namespace UltimateNode
         public void Play(object owner)
         {
             PlayFlow(owner, nameof(FlowControl.OnStart));
-            
+
             PlayAIFlow(owner);
         }
 
@@ -105,7 +107,10 @@ namespace UltimateNode
                                 // preNode
                                 var preNode = ultimateNodeData;
                                 await ExecutePreNode(preNode);
+                                DebugOnEnterNode(preNode);
                                 await preNode.Execute(p_Owner);
+                                DebugOnExitNode(preNode);
+
                                 foreach (var edgeData in m_Data.Edges)
                                 {
                                     // Match this node(OutputNode) connected inputNode
@@ -151,13 +156,18 @@ namespace UltimateNode
                         if (inputPortData.OriginVal is FlowData originVal)
                         {
                             await ExecutePreNode(outputNodeData);
+
+                            DebugOnEnterNode(outputNodeData);
                             await outputNodeData.Execute(p_Owner);
+                            DebugOnExitNode(outputNodeData);
                         }
                     }
                     else
                     {
                         await ExecutePreNode(outputNodeData);
+                        DebugOnEnterNode(outputNodeData);
                         await outputNodeData.Execute(p_Owner);
+                        DebugOnExitNode(outputNodeData);
                     }
 
                     foreach (var edgeData in m_Data.Edges)
@@ -238,14 +248,37 @@ namespace UltimateNode
                 if (node.Name == nameof(AI.Sequence) || node.Name == nameof(AI.Select))
                 {
                     var returnVal = await InvokeOnAIThinkByProcess(p_Owner, node, p_FlowData);
-                    return returnVal;
+                    if (currentNode.Name == nameof(AI.Select))
+                    {
+                        if (returnVal == false)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    else if(currentNode.Name == nameof(AI.Sequence))
+                    {
+                        if (returnVal == false)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
                 }
                 else
                 {
                     var actionOrConditionOutputPort = node.PortData.FirstOrDefault(x =>
                         IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
                     actionOrConditionOutputPort.OriginVal = p_FlowData;
+                    DebugOnEnterNode(node);
                     await node.Execute(p_Owner);
+                    DebugOnExitNode(node);
 
                     if (currentNode.Name == nameof(AI.Sequence))
                     {
@@ -280,10 +313,23 @@ namespace UltimateNode
                 }
             }
 
+            if (currentNode.Name == nameof(AI.Sequence))
+            {
+                return true;
+            }
+            else if (currentNode.Name == nameof(AI.Select))
+            {
+                return false;
+            }
+
+            return false;
+
             var currentOutputPort = outputNodeData.PortData.FirstOrDefault(x =>
                 IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
             currentOutputPort.OriginVal = p_FlowData;
+            DebugOnEnterNode(outputNodeData);
             await outputNodeData.Execute(p_Owner);
+            DebugOnExitNode(outputNodeData);
             return p_FlowData.ReturnValue;
         }
 
@@ -301,6 +347,22 @@ namespace UltimateNode
             else
             {
                 return false;
+            }
+        }
+
+        private void DebugOnEnterNode(UltimateNodeData p_NodeData)
+        {
+            if (IsDebug)
+            {
+                EventManager.Instance.EventTrigger(UltimateGraphEventConst.OnEnterExecuteNode, p_NodeData);
+            }
+        }
+
+        private void DebugOnExitNode(UltimateNodeData p_NodeData)
+        {
+            if (IsDebug)
+            {
+                EventManager.Instance.EventTrigger(UltimateGraphEventConst.OnExitExecuteNode, p_NodeData);
             }
         }
     }

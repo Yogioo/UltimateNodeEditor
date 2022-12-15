@@ -8,6 +8,18 @@ namespace UltimateNode
     public abstract class UltimateGraphEntity : MonoBehaviour
     {
         public string JsonData;
+        public UltimateGraphData GraphData
+        {
+            get
+            {
+                if (m_GraphData == null)
+                {
+                    m_GraphData = LoadFromJson();
+                }
+                return m_GraphData;
+            }
+        }
+
         private UltimateGraphData m_GraphData = null;
 
         private UltimateFlowProcess processor
@@ -30,6 +42,10 @@ namespace UltimateNode
             LoadFromJson();
         }
 
+        public void ReloadFromJson()
+        {
+            m_GraphData = LoadFromJson();
+        }
         public UltimateGraphData LoadFromJson()
         {
             if (string.IsNullOrWhiteSpace(JsonData))
@@ -64,13 +80,13 @@ namespace UltimateNode
         {
             CheckJson();
             processor.PlayFlow(this, nameof(FlowControl.OnStart));
-            processor.PlayAIFlow(this);
         }
 
         public void PlayUpdate()
         {
             CheckJson();
             processor.PlayFlow(this, nameof(FlowControl.OnUpdate));
+            processor.PlayAIFlow(this);
         }
 
         #region Unity Action

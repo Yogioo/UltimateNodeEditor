@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -40,12 +41,25 @@ namespace UltimateNode.Editor
             this.rootVisualElement.Add(m_ToolbarView);
         }
 
+
+        // private void LateUpdate()
+        private void Update()
+        {
+            m_GraphView.OnLateUpdate?.Invoke();
+        }
+
         public void Init(UltimateGraphEntity p_GraphEntity)
         {
             m_GraphView.ClearAllNodeAndEdgeView();
-            
+
             m_ToolbarView.InitGraphEntity(p_GraphEntity);
-            m_GraphView.Init(p_GraphEntity.LoadFromJson());
+
+            if (!Application.isPlaying)
+            {
+                p_GraphEntity.ReloadFromJson();
+            }
+            UltimateGraphData data = p_GraphEntity.GraphData;
+            m_GraphView.Init(data);
         }
 
         private void OnDisable()

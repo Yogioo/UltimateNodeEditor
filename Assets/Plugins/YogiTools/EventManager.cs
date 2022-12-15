@@ -72,8 +72,9 @@ namespace YogiTools
 
                 return _Instance;
             }
-        } 
-        public static EventManager _Instance; 
+        }
+
+        private static EventManager _Instance; 
         public EventManager()
         {
         }

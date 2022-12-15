@@ -25,7 +25,6 @@ namespace UltimateNode.Editor
             // this.titleContainer.Add(btn);
         }
 
-
         public override void UpdatePresenterPosition()
         {
             this.NodeData.Position = this.GetPosition();

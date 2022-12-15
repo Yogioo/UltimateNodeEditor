@@ -25,7 +25,7 @@ namespace UltimateNode
 
         public static void ActionWalk(AIFlowData i, [HidePort] ref AIFlowData o)
         {
-            o.ReturnValue = false;
+            o.ReturnValue = true;
             Debug.Log("Player Walking False");
         }
 

@@ -19,6 +19,10 @@ namespace UltimateNode.Editor
         private List<UltimateNodeView> m_AllNodes;
         private List<UltimateEdgeView> m_AllEdges;
 
+        public Action OnLateUpdate;
+        private StyleColor titleBGColor = new StyleColor(new Color(0.2470588f, 0.2470588f, 0.2470588f, 0.8f));
+        private StyleColor titleBGColor_Execute = new StyleColor(new Color(1, 0.2470588f, 0.2470588f, 0.8f));
+
         public UltimateGraphView(UltimateWindowBase m_Window)
         {
             m_AllNodes = new List<UltimateNodeView>();
@@ -42,6 +46,28 @@ namespace UltimateNode.Editor
                 {
                     OnDropOutsidePort(args.edge, args.position);
                 });
+
+            EventManager.Instance.AddEventListener<UltimateNodeData>(UltimateGraphEventConst.OnEnterExecuteNode,
+                (node) =>
+                {
+                    var nodeView = this.m_AllNodes.FirstOrDefault(x => x.NodeData.GUID == node.GUID);
+                    if (nodeView != null)
+                    {
+                        nodeView.titleContainer.style.backgroundColor = titleBGColor_Execute;
+                    }
+                });
+            // EventManager.Instance.AddEventListener<UltimateNodeData>(UltimateGraphEventConst.OnEnterExecuteNode, (node) =>
+            // {
+            //     var nodeView = this.m_AllNodes.FirstOrDefault(x => x.NodeData.GUID == node.GUID);
+            //     if (nodeView != null)
+            //     {
+            //         nodeView.titleContainer.style.backgroundColor = titleBGColor;
+            //     }
+            // });
+            OnLateUpdate += () =>
+            {
+                this.m_AllNodes.ForEach(x => { x.titleContainer.style.backgroundColor = titleBGColor; });
+            };
         }
 
         public void Init(UltimateGraphData p_GraphData)
