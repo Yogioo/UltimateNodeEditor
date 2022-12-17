@@ -34,6 +34,15 @@ namespace UltimateNode.Editor
             objectField.SetEnabled(false);
             this.Add(objectField);
 
+            this.Add(AddBtn("Ping", () =>
+            {
+                if (m_GraphEntity != null)
+                {
+                    Selection.activeObject = m_GraphEntity;
+                    EditorGUIUtility.PingObject(m_GraphEntity);
+                }
+            }));
+            
             this.Add(AddBtn("Reload", () =>
             {
                 if (m_GraphEntity != null)

@@ -321,16 +321,7 @@ namespace UltimateNode
             {
                 return false;
             }
-
             return false;
-
-            var currentOutputPort = outputNodeData.PortData.FirstOrDefault(x =>
-                IsTypeOrSubclass(x.PortValueType, typeof(AIFlowData)) && x.PortType == PortType.Output);
-            currentOutputPort.OriginVal = p_FlowData;
-            DebugOnEnterNode(outputNodeData);
-            await outputNodeData.Execute(p_Owner);
-            DebugOnExitNode(outputNodeData);
-            return p_FlowData.ReturnValue;
         }
 
         private static List<UltimateNodeData> OrderNodes(List<UltimateNodeData> connectionNodes)
