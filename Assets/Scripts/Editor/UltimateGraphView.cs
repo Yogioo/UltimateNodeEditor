@@ -201,8 +201,8 @@ namespace UltimateNode.Editor
 
         public void OnDropOutsidePort(UltimateEdgeView edge, UnityEngine.Vector2 position)
         {
-            // This is wrong position, but I don't now how to calc this.... help~
-            OnOpenSearchWindow(GetLocalMousePosition(position));
+            var screenPos = position + this.m_CoreWindow.position.position;
+            OnOpenSearchWindow(screenPos);
         }
 
         #region Callback
